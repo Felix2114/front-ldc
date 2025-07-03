@@ -264,29 +264,21 @@ function imprimirTicket(pedido) {
 
     if (!fechaSeleccionada) return;
 
-    const fechaInput = new Date(fechaSeleccionada);
-    fechaInput.setHours(0, 0, 0, 0);
-
-   // console.log("📅 Fecha seleccionada en el input:", fechaInput.toISOString());
-    //console.log("🧾 Total de pedidos recibidos:", pedidos.length);
-    //console.log("📦 Pedidos completos:", pedidos);
+    // 🔧 Construimos fecha local (no UTC)
+    const [year, month, day] = fechaSeleccionada.split("-");
+    const fechaInput = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
 
     const pedidosFiltrados = pedidos.filter(pedido => {
         if (pedido.estado !== "listo") return false;
 
         const fechaPedido = new Date(pedido.fecha._seconds * 1000);
-        fechaPedido.setHours(0, 0, 0, 0);
 
-        const coincide = fechaPedido.getTime() === fechaInput.getTime();
-
-       // console.log("➡️ Pedido ID:", pedido.id);
-        //console.log("  🔹 Fecha pedido:", fechaPedido.toISOString());
-        //console.log("  🔹 Coincide con fecha input:", coincide);
-
-        return coincide;
+        return (
+            fechaPedido.getFullYear() === fechaInput.getFullYear() &&
+            fechaPedido.getMonth() === fechaInput.getMonth() &&
+            fechaPedido.getDate() === fechaInput.getDate()
+        );
     });
-
-    //console.log("✅ Pedidos filtrados por fecha:", pedidosFiltrados);
 
     let total = 0;
 
@@ -298,19 +290,17 @@ function imprimirTicket(pedido) {
 
         const li = document.createElement("li");
         li.classList.add("list-group-item");
-       li.innerHTML = `
-    <strong>Mesera:</strong> ${pedido.mesera}<br>
-    <strong>Total:</strong> $${pedido.total.toFixed(2)}<br>
-    <strong>Fecha:</strong> ${fechaFormateada}
-`;
+        li.innerHTML = `
+            <strong>Mesera:</strong> ${pedido.mesera}<br>
+            <strong>Total:</strong> $${pedido.total.toFixed(2)}<br>
+            <strong>Fecha:</strong> ${fechaFormateada}
+        `;
 
         listaVentas.appendChild(li);
     });
 
     totalVentas.textContent = total.toFixed(2);
 }
-
-
 
 
     function agregarFilaComida(producto, lista) {
