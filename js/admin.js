@@ -18,8 +18,7 @@ await cargarDatos();
         mostrarVentas(pedidosListos);
     });
 
-    // Mostrar ventas por primera vez al cargar
-    mostrarVentas(pedidosListos);
+  
 
 
     async function cargarDatos() {
@@ -42,12 +41,14 @@ await cargarDatos();
 
            //  pedidosGlobal = pedidosListos;
            pedidosListos = pedidosListosData;
-
             mostrarMenu(menu);
             mostrarInventario(inventario);
            // mostrarVentas(pedidosListos);
             mostrarPedidosPorConfirmar(pedidosListosData);
             mostrarMesas(mesas);
+
+           mostrarVentas(pedidosListos);
+
         } catch (error) {
             console.error("Error al cargar datos:", error);
         }
@@ -177,9 +178,9 @@ await cargarDatos();
     lista.innerHTML = "";
 
     // 👉 Filtrar solo los pedidos con estado "listo"
-    const pedidosListos = pedidos.filter(pedido => pedido.estado === "listo");
+    const pedidosListosConfirmados = pedidos.filter(pedido => pedido.estado === "listo");
 
-    pedidosListos.forEach(pedido => {
+    pedidosListosConfirmados.forEach(pedido => {
         const card = document.createElement("div");
         card.className = "pedido-card";
 
@@ -253,53 +254,62 @@ function imprimirTicket(pedido) {
     
     
 
-   function mostrarVentas(pedidos) {///////////////////////////////////////no funciona el buscador
-    
-    
-    
-
+ function mostrarVentas(pedidos) {
     const fechaSeleccionada = document.getElementById("fechaVentas").value;
     const listaVentas = document.getElementById("listaVentas");
     const totalVentas = document.getElementById("totalVentas");
 
-    console.log("fecha del pedido:", fechaSeleccionada);
-    // Limpiar contenido previo
     listaVentas.innerHTML = "";
     totalVentas.textContent = "0.00";
 
-    if (!fechaSeleccionada) return; // No hay fecha, no se muestra nada
+    if (!fechaSeleccionada) return;
 
     const fechaInput = new Date(fechaSeleccionada);
+    fechaInput.setHours(0, 0, 0, 0);
 
-    // Filtrar por estado "listo" y por la fecha seleccionada
+   // console.log("📅 Fecha seleccionada en el input:", fechaInput.toISOString());
+    //console.log("🧾 Total de pedidos recibidos:", pedidos.length);
+    //console.log("📦 Pedidos completos:", pedidos);
+
     const pedidosFiltrados = pedidos.filter(pedido => {
         if (pedido.estado !== "listo") return false;
 
-        const fechaPedido = pedido.fecha.toDate ? pedido.fecha.toDate() : new Date(pedido.fecha);
-        
-        return (
-            fechaPedido.getFullYear() === fechaInput.getFullYear() &&
-            fechaPedido.getMonth() === fechaInput.getMonth() &&
-            fechaPedido.getDate() === fechaInput.getDate()
-        );
+        const fechaPedido = new Date(pedido.fecha._seconds * 1000);
+        fechaPedido.setHours(0, 0, 0, 0);
+
+        const coincide = fechaPedido.getTime() === fechaInput.getTime();
+
+       // console.log("➡️ Pedido ID:", pedido.id);
+        //console.log("  🔹 Fecha pedido:", fechaPedido.toISOString());
+        //console.log("  🔹 Coincide con fecha input:", coincide);
+
+        return coincide;
     });
+
+    //console.log("✅ Pedidos filtrados por fecha:", pedidosFiltrados);
 
     let total = 0;
 
     pedidosFiltrados.forEach(pedido => {
-        const fechaPedido = pedido.fecha.toDate ? pedido.fecha.toDate() : new Date(pedido.fecha);
+        const fechaPedido = new Date(pedido.fecha._seconds * 1000);
         const fechaFormateada = fechaPedido.toLocaleString();
 
         total += pedido.total;
 
         const li = document.createElement("li");
         li.classList.add("list-group-item");
-        li.textContent = `Pedido ID: ${pedido.id} - Total: $${pedido.total.toFixed(2)} - Fecha: ${fechaFormateada}`;
+       li.innerHTML = `
+    <strong>Mesera:</strong> ${pedido.mesera}<br>
+    <strong>Total:</strong> $${pedido.total.toFixed(2)}<br>
+    <strong>Fecha:</strong> ${fechaFormateada}
+`;
+
         listaVentas.appendChild(li);
     });
 
     totalVentas.textContent = total.toFixed(2);
 }
+
 
 
 
