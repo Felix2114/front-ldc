@@ -1,11 +1,25 @@
 document.addEventListener("DOMContentLoaded", async () => {
     const apiPedidos = "https://api-ldc.onrender.com/pedidos";
+    const apiInventario = "https://api-ldc.onrender.com/inventario";
     const listaCocina = document.getElementById("listaCocina");
+
+    let nombresBebidas = [];
 
     async function cargarDatos() {
         try {
-            const pedidosRes = await fetch(`${apiPedidos}/entregado/pendientes`);
-            const pedidos = await pedidosRes.json();
+            const [pedidosRes, inventarioRes] = await Promise.all([
+                fetch(`${apiPedidos}/entregado/pendientes`),
+                fetch(`${apiInventario}/bebidas`)
+            ]);
+
+            const [pedidos, inventario] = await Promise.all([
+                pedidosRes.json(),
+                inventarioRes.json()
+            ]);
+
+            // Guardar los nombres de las bebidas para excluirlas después
+            nombresBebidas = inventario.map(b => b.nombre.toLowerCase());
+
             mostrarPedidosPorConfirmar(pedidos);
         } catch (error) {
             console.error("Error al cargar datos:", error);
@@ -20,7 +34,11 @@ document.addEventListener("DOMContentLoaded", async () => {
         pedidos.sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
 
         pedidos.forEach(pedido => {
-            const productosPendientes = pedido.productos.filter(prod => prod.estado === false);
+            // ✅ Filtrar productos que no son bebidas y aún están pendientes
+            const productosPendientes = pedido.productos.filter(prod =>
+                !nombresBebidas.includes(prod.nombre.toLowerCase()) && prod.estado === false
+            );
+
             if (productosPendientes.length === 0) return;
 
             const card = document.createElement("div");
@@ -55,6 +73,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     // ✅ Carga inicial y actualizaciones en tiempo real
-    cargarDatos();
+    await cargarDatos();
     setInterval(cargarDatos, 5000); // Actualiza cada 5 segundos
 });
