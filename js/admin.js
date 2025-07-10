@@ -8,6 +8,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     const listaComidas = document.getElementById("tablaComidas");
     const listaSnacks = document.getElementById("tablaSnacks");
+    const listaAntojitos = document.getElementById("tablaAntojitos");
     const listaBebidas = document.getElementById("tablaBebidas");
     const listaMesas = document.getElementById("listaMesas");
  document.getElementById("fechaVentas").valueAsDate = new Date();
@@ -18,6 +19,14 @@ await cargarDatos();
         mostrarVentas(pedidosListos);
     });
 
+    const fechaInput = document.getElementById("fechaConfirmar");
+    
+    const hoy = new Date();
+    const yyyy = hoy.getFullYear();
+    const mm = String(hoy.getMonth() + 1).padStart(2, "0");
+    const dd = String(hoy.getDate()).padStart(2, "0");
+
+    fechaInput.value = `${yyyy}-${mm}-${dd}`;
   
 
 
@@ -155,17 +164,19 @@ await cargarDatos();
     function mostrarMenu(menu) {
         listaComidas.innerHTML = "";
         listaSnacks.innerHTML = "";
+        listaAntojitos.innerHTML = "";
 
         const comidas = menu.filter(item => item.tipo === 'comida');
         const snacks = menu.filter(item => item.tipo === 'snack');
+        const antojitos = menu.filter(item => item.tipo == 'antojito')
 
         comidas.forEach(comida => agregarFilaComida(comida, listaComidas));
         snacks.forEach(snack => agregarFilaComida(snack, listaSnacks));
+        antojitos.forEach(antojitos => agregarFilaComida(antojitos, listaAntojitos));
     }
 
     function mostrarInventario(inventario) {
         listaBebidas.innerHTML = "";
-
         if (Array.isArray(inventario)) {
             inventario.forEach(bebida => agregarFilaBebida(bebida));
         } else {
@@ -173,14 +184,28 @@ await cargarDatos();
         }
     }
 
-   function mostrarPedidosPorConfirmar(pedidos) {
+ function mostrarPedidosPorConfirmar(pedidos) {
     const lista = document.getElementById("listaPedidosPorConfirmar");
+    const fechaSeleccionada = document.getElementById("fechaConfirmar").value;
     lista.innerHTML = "";
 
-    // 👉 Filtrar solo los pedidos con estado "listo"
-    const pedidosListosConfirmados = pedidos.filter(pedido => pedido.estado === "listo");
+    if (!fechaSeleccionada) return;
 
-    pedidosListosConfirmados.forEach(pedido => {
+    const [year, month, day] = fechaSeleccionada.split("-");
+    const fechaInput = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+
+    const pedidosFiltrados = pedidos.filter(pedido => {
+        if (pedido.estado !== "listo") return false;
+        const fechaPedido = new Date(pedido.fecha._seconds * 1000);
+
+        return (
+            fechaPedido.getFullYear() === fechaInput.getFullYear() &&
+            fechaPedido.getMonth() === fechaInput.getMonth() &&
+            fechaPedido.getDate() === fechaInput.getDate()
+        );
+    });
+
+    pedidosFiltrados.forEach(pedido => {
         const card = document.createElement("div");
         card.className = "pedido-card";
 
@@ -196,14 +221,12 @@ await cargarDatos();
             <hr>
         `;
 
-        // 👉 Evento para imprimir
         card.querySelector(".imprimir-ticket").addEventListener("click", () => {
             imprimirTicket(pedido);
         });
 
-        // 👉 Evento para ocultar el pedido
         card.querySelector(".ocultar-pedido").addEventListener("click", () => {
-            card.remove(); // Quita el pedido de la vista
+            card.remove();
         });
 
         lista.appendChild(card);
@@ -212,32 +235,119 @@ await cargarDatos();
 
 
 
+
 function imprimirTicket(pedido) {
-    const ventana = window.open('', '', 'width=400,height=600');
+    const fecha = new Date();
+    const fechaStr = fecha.toLocaleDateString();
+    const horaStr = fecha.toLocaleTimeString();
+
+    const ventana = window.open('', '', 'width=400,height=700');
+
     ventana.document.write(`
         <html>
             <head>
                 <title>Ticket</title>
                 <style>
-                    body { font-family: monospace; padding: 10px; }
-                    h3 { text-align: center; }
-                    ul { padding-left: 0; list-style: none; }
-                    li { margin: 2px 0; }
-                    .total { font-weight: bold; margin-top: 10px; }
+                    body {
+                        font-family: monospace;
+                        padding: 10px;
+                        text-align: center;
+                    }
+                    img.logo {
+                        width: 100px;
+                        margin-bottom: 10px;
+                    }
+                    h2 {
+                        margin: 0;
+                    }
+                    .info {
+                        text-align: left;
+                        margin: 10px 0;
+                    }
+                    table {
+                        width: 100%;
+                        border-collapse: collapse;
+                        margin: 10px 0;
+                    }
+                    th, td {
+                        border-bottom: 1px dashed #000;
+                        padding: 4px;
+                        text-align: center;
+                    }
+                    .total {
+                        font-weight: bold;
+                        margin-top: 10px;
+                        text-align: right;
+                    }
+                    .saludo, .oferta {
+                        margin-top: 15px;
+                        font-size: 12px;
+                    }
+                    .social {
+                        margin-top: 10px;
+                        font-size: 12px;
+                    }
                 </style>
             </head>
             <body>
-                <h3>Los Dos Carnales</h3>
-                <p><strong>Mesa:</strong> ${pedido.mesaId}</p>
-                <p><strong>Mesera:</strong> ${pedido.mesera}</p>
-                <hr>
-                <ul>
-                    ${pedido.productos.map(p => `<li>${p.nombre} x${p.cantidad || 1} - $${p.precio.toFixed(2)}</li>`).join('')}
-                </ul>
-                <hr>
-                <p class="total">Total: $${pedido.total.toFixed(2)}</p>
-                <p style="text-align:center;">¡Gracias por su visita a Los Dos Carnales!</p>
-                <p style="text-align:center;">Visita nuestra pagina de Facebook "Los Dos Carnales"</p>
+                <!-- ✅ Logotipo -->
+                <img src="../images/LosDosCar.jpeg" class="logo" alt="Logo"><br>
+                
+                <!-- ✅ Nombre y ubicación -->
+                <h2>Los Dos Carnales</h2>
+               
+
+                <!-- ✅ Información del pedido -->
+                <div class="info">
+                    <p>Atendió: ${pedido.mesera}</p>
+                    <p>Mesa: ${pedido.mesaId || "N/A"}</p>
+                    <p>Fecha: ${fechaStr}</p>
+                    <p>Hora: ${horaStr}</p>
+                </div>
+
+                <!-- ✅ Detalle de productos -->
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Artículo</th>
+                            <th>Cant</th>
+                            <th>Prec</th>
+                            <th>Importe</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${pedido.productos.map(p => `
+                            <tr>
+                                <td>${p.nombre}</td>
+                                <td>${p.cantidad || 1}</td>
+                                <td>$${p.precio.toFixed(2)}</td>
+                                <td>$${(p.precio * (p.cantidad || 1)).toFixed(2)}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+
+                <!-- ✅ Total -->
+                <div class="total">TOTAL: $${pedido.total.toFixed(2)}</div>
+
+                <!-- ✅ Saludo y oferta -->
+                <div class="saludo">¡Muchas gracias por su visita!</div>
+                <div class="oferta">
+                    Camino al barreal s/n, Colonia Santa Teresa<br>
+                    
+                </div>
+
+                <!-- Redes -->
+                <div class="social">
+                   
+                    📘 Facebook Los dos carnales <br>
+                </div>
+
+                <div class="saludo">
+
+                #somosLosDosCarnales
+                </div>
+
                 <script>
                     window.onload = function() {
                         window.print();
@@ -248,6 +358,88 @@ function imprimirTicket(pedido) {
         </html>
     `);
 }
+
+
+
+
+function imprimirResumenVentas(pedidos) {
+    const fechaSeleccionada = document.getElementById("fechaVentas").value;
+
+    if (!fechaSeleccionada) {
+        alert("Selecciona una fecha para imprimir el resumen.");
+        return;
+    }
+
+    const [year, month, day] = fechaSeleccionada.split("-");
+    const fechaInput = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+
+    const pedidosFiltrados = pedidos.filter(pedido => {
+        if (pedido.estado !== "listo") return false;
+        const fechaPedido = new Date(pedido.fecha._seconds * 1000);
+
+        return (
+            fechaPedido.getFullYear() === fechaInput.getFullYear() &&
+            fechaPedido.getMonth() === fechaInput.getMonth() &&
+            fechaPedido.getDate() === fechaInput.getDate()
+        );
+    });
+
+    if (pedidosFiltrados.length === 0) {
+        alert("No hay ventas para la fecha seleccionada.");
+        return;
+    }
+
+    let total = 0;
+
+    const detallesHTML = pedidosFiltrados.map(pedido => {
+        const fechaPedido = new Date(pedido.fecha._seconds * 1000);
+        const hora = fechaPedido.toLocaleTimeString();
+        total += pedido.total;
+
+        return `
+            <li>
+                Mesera: ${pedido.mesera} |
+                Total: $${pedido.total.toFixed(2)} |
+                Hora: ${hora}
+            </li>
+        `;
+    }).join("");
+
+    const ventana = window.open('', '', 'width=400,height=600');
+    ventana.document.write(`
+        <html>
+            <head>
+                <title>Resumen de Ventas</title>
+                <style>
+                    body { font-family: monospace; padding: 10px; }
+                    h3, h4 { text-align: center; }
+                    ul { padding-left: 0; list-style: none; }
+                    li { margin: 5px 0; }
+                    .total { font-weight: bold; margin-top: 15px; text-align: center; }
+                </style>
+            </head>
+            <body>
+                <h3>Los Dos Carnales</h3>
+                <h4>Resumen de Ventas</h4>
+                <p><strong>Fecha:</strong> ${fechaSeleccionada}</p>
+                <hr>
+                <ul>
+                    ${detallesHTML}
+                </ul>
+                <hr>
+                <p class="total">TOTAL DEL DÍA: $${total.toFixed(2)}</p>
+                <p style="text-align:center;">¡Gracias por su esfuerzo!</p>
+                <script>
+                    window.onload = function() {
+                        window.print();
+                        setTimeout(() => window.close(), 500);
+                    }
+                </script>
+            </body>
+        </html>
+    `);
+}
+
 
 
     
@@ -300,6 +492,17 @@ function imprimirTicket(pedido) {
     });
 
     totalVentas.textContent = total.toFixed(2);
+
+    const btnImprimir = document.createElement("button");
+    btnImprimir.textContent = "🖨️ Imprimir resumen";
+    btnImprimir.className = "btn btn-success mt-3";
+    btnImprimir.addEventListener("click", () => {
+        imprimirResumenVentas(pedidos); // 🔥 Llama a tu función existente
+    });
+
+    listaVentas.appendChild(btnImprimir);
+
+   
 }
 
 
@@ -484,6 +687,30 @@ function imprimirTicket(pedido) {
             console.error("Error agregando snack:", error);
         }
     });
+
+
+     document.getElementById("agregarAntojito").addEventListener("click", async () => {
+        const nombre = prompt("Nombre del Antojito:");
+        const precio = parseFloat(prompt("Precio:"));
+
+        if (!nombre || isNaN(precio)) {
+            alert("Datos inválidos");
+            return;
+        }
+
+        try {
+            await fetch(apiURL, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ nombre, precio, tipo: "antojito" })
+            });
+            cargarDatos();
+            alert("Antojito agregado correctamente.");
+        } catch (error) {
+            console.error("Error al agregar Antojito:", error);
+        }
+    });
+
 
     // Iniciar carga de datos al abrir la página
     cargarDatos();

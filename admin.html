@@ -47,6 +47,7 @@
                     <ul class="list-group" id="listaVentas"></ul>
                     <h5 class="mt-3">Total: $<span id="totalVentas">0.00</span></h5>
                 </div>
+             <!-- <button class="btn btn-success my-2" onclick="imprimirResumenVentas(pedidosGlobal)">🖨️ Imprimir resumen</button> -->
             </div>
             
             <!-- Inventario -->
@@ -100,6 +101,23 @@
                         <tbody id="tablaSnacks"></tbody>
                     </table>
                     <button class="btn btn-primary btn-sm" id="agregarSnack">Agregar Snack</button>
+
+
+                    <h5 class="mt-4">🌮 Antojitos</h5>
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Antojito</th>
+                                <th>Precio</th>
+                                <th>Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tablaAntojitos"></tbody>
+                    </table>
+                    <button class="btn btn-primary btn-sm" id="agregarAntojito">Agregar Antojito</button>
+
+
+
                 </div>
             </div>
 
@@ -128,11 +146,19 @@
 
             <!-- Confirmar Pedidos -->
             <div class="tab-pane fade" id="confirmarPedidos">
-                <div class="card p-3">
-                    <h4>📦 Confirmación de Pedidos</h4>
-                    <div id="listaPedidosPorConfirmar"></div>
-                </div>
-            </div>
+    <div class="card p-3">
+        <h4>📦 Confirmación de Pedidos</h4>
+
+        <!-- 📅 Filtro por fecha -->
+        <div class="mb-3">
+            <label for="fechaConfirmar" class="form-label">Selecciona una fecha:</label>
+            <input type="date" id="fechaConfirmar" class="form-control">
+        </div>
+
+        <div id="listaPedidosPorConfirmar"></div>
+    </div>
+</div>
+
         </div>
     </div>
     

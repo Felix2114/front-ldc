@@ -25,6 +25,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const listaComidas = document.getElementById("listaComidas");
     const listaBebidas = document.getElementById("listaBebidas");
     const listaSnacks = document.getElementById("listaSnacks");
+    const listaAntojitos = document.getElementById("listaAntojitos");
     //const listaOrdenesPendientes = document.getElementById("listaOrdenesPendientes");
     //const listaHistorialPedidos = document.getElementById("listaHistorialPedidos");
     const botonCancelar = document.getElementById("cancelarPedido");
@@ -344,10 +345,12 @@ async function cargarOrdenes() {
         const listaEditarComidas = document.getElementById("listaEditarComidas");
         const listaEditarBebidas = document.getElementById("listaEditarBebidas");
         const listaEditarSnacks = document.getElementById("listaEditarSnacks");
+        const listaEditarAntojitos = document.getElementById("listaEditarAntojitos");
 
         listaEditarComidas.innerHTML = '';
         listaEditarBebidas.innerHTML = '';
         listaEditarSnacks.innerHTML = '';
+        listaEditarAntojitos.innerHTML = '';
 
         // ✅ Cargar comidas y snacks
         menu.forEach(item => {
@@ -359,6 +362,9 @@ async function cargarOrdenes() {
                 agregarItemsListaEditar([item], listaEditarComidas, cantidadInicial);
             } else if (item.tipo === "snack") {
                 agregarItemsListaEditar([item], listaEditarSnacks, cantidadInicial);
+            }
+            else if (item.tipo === "antojito") {
+                agregarItemsListaEditar([item], listaEditarAntojitos, cantidadInicial);
             }
         });
 
@@ -669,6 +675,9 @@ const productosFormateados = Object.values(productosMap);
                     agregarItemsLista([item], listaComidas);
                 } else if (item.tipo === "snack" && !document.querySelector(`[data-nombre="${item.nombre}"]`)) {
                     agregarItemsLista([item], listaSnacks);
+                }
+                else if (item.tipo === "antojito" && !document.querySelector(`[data-nombre="${item.nombre}"]`)) {
+                    agregarItemsLista([item], listaAntojitos);
                 }
             });
     
