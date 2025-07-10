@@ -184,7 +184,7 @@ await cargarDatos();
         }
     }
 
- function mostrarPedidosPorConfirmar(pedidos) {
+function mostrarPedidosPorConfirmar(pedidos) {
     const lista = document.getElementById("listaPedidosPorConfirmar");
     const fechaSeleccionada = document.getElementById("fechaConfirmar").value;
     lista.innerHTML = "";
@@ -209,13 +209,39 @@ await cargarDatos();
         const card = document.createElement("div");
         card.className = "pedido-card";
 
+        // Agrupar productos por nombre
+        const productosAgrupados = {};
+
+        pedido.productos.forEach(prod => {
+            if (productosAgrupados[prod.nombre]) {
+                productosAgrupados[prod.nombre].cantidad += prod.cantidad;
+            } else {
+                productosAgrupados[prod.nombre] = {
+                    cantidad: prod.cantidad,
+                    precio: prod.precio
+                };
+            }
+        });
+
+        // Crear lista de productos con subtotal
+        let listaProductosHTML = "";
+        let total = 0;
+
+        for (const nombre in productosAgrupados) {
+            const { cantidad, precio } = productosAgrupados[nombre];
+            const subtotal = cantidad * precio;
+            total += subtotal;
+
+            listaProductosHTML += `<li>${nombre} x${cantidad} - $${precio.toFixed(2)} c/u = $${subtotal.toFixed(2)}</li>`;
+        }
+
         card.innerHTML = `
             <h5>Mesa: ${pedido.mesaId || "Desconocida"}</h5>
             <p><strong>Mesera:</strong> ${pedido.mesera}</p>
             <ul>
-                ${pedido.productos.map(prod => `<li>${prod.nombre} - $${prod.precio.toFixed(2)}</li>`).join('')}
+                ${listaProductosHTML}
             </ul>
-            <p><strong>Total:</strong> $${pedido.total.toFixed(2)}</p>
+            <p><strong>Total:</strong> $${total.toFixed(2)}</p>
             <button class="btn btn-primary btn-sm imprimir-ticket">🧾 Imprimir ticket</button>
             <button class="btn btn-secondary btn-sm ocultar-pedido ms-2">Ocultar</button>
             <hr>
@@ -240,6 +266,39 @@ function imprimirTicket(pedido) {
     const fecha = new Date();
     const fechaStr = fecha.toLocaleDateString();
     const horaStr = fecha.toLocaleTimeString();
+
+    // Agrupar productos por nombre
+    const productosAgrupados = {};
+
+    pedido.productos.forEach(p => {
+        if (productosAgrupados[p.nombre]) {
+            productosAgrupados[p.nombre].cantidad += p.cantidad || 1;
+        } else {
+            productosAgrupados[p.nombre] = {
+                precio: p.precio,
+                cantidad: p.cantidad || 1
+            };
+        }
+    });
+
+    // Construir filas HTML de la tabla
+    let filasProductos = "";
+    let total = 0;
+
+    for (const nombre in productosAgrupados) {
+        const { precio, cantidad } = productosAgrupados[nombre];
+        const subtotal = precio * cantidad;
+        total += subtotal;
+
+        filasProductos += `
+            <tr>
+                <td>${nombre}</td>
+                <td>${cantidad}</td>
+                <td>$${precio.toFixed(2)}</td>
+                <td>$${subtotal.toFixed(2)}</td>
+            </tr>
+        `;
+    }
 
     const ventana = window.open('', '', 'width=400,height=700');
 
@@ -291,11 +350,10 @@ function imprimirTicket(pedido) {
             </head>
             <body>
                 <!-- ✅ Logotipo -->
-                <img src="../images/LosDosCar.jpeg" class="logo" alt="Logo"><br>
+                <img src="https://felix2114.github.io/front-ldc/images/LosDosCar.jpeg" class="logo" alt="Logo"><br>
                 
                 <!-- ✅ Nombre y ubicación -->
                 <h2>Los Dos Carnales</h2>
-               
 
                 <!-- ✅ Información del pedido -->
                 <div class="info">
@@ -316,36 +374,28 @@ function imprimirTicket(pedido) {
                         </tr>
                     </thead>
                     <tbody>
-                        ${pedido.productos.map(p => `
-                            <tr>
-                                <td>${p.nombre}</td>
-                                <td>${p.cantidad || 1}</td>
-                                <td>$${p.precio.toFixed(2)}</td>
-                                <td>$${(p.precio * (p.cantidad || 1)).toFixed(2)}</td>
-                            </tr>
-                        `).join('')}
+                        ${filasProductos}
                     </tbody>
                 </table>
 
                 <!-- ✅ Total -->
-                <div class="total">TOTAL: $${pedido.total.toFixed(2)}</div>
+                <div class="total">TOTAL: $${total.toFixed(2)}</div>
 
                 <!-- ✅ Saludo y oferta -->
                 <div class="saludo">¡Muchas gracias por su visita!</div>
                 <div class="oferta">
                     Camino al barreal s/n, Colonia Santa Teresa<br>
-                    
                 </div>
 
-                <!-- Redes -->
+                <!-- ✅ Redes sociales -->
                 <div class="social">
-                   
-                    📘 Facebook Los dos carnales <br>
-                </div>
+    <img src="https://upload.wikimedia.org/wikipedia/commons/5/51/Facebook_f_logo_%282019%29.svg" width="16" height="16" style="vertical-align:middle; margin-right:5px;">
+    Facebook Los Dos Carnales<br>
+</div>
+
 
                 <div class="saludo">
-
-                #somosLosDosCarnales
+                    #somosLosDosCarnales👬
                 </div>
 
                 <script>
@@ -358,6 +408,7 @@ function imprimirTicket(pedido) {
         </html>
     `);
 }
+
 
 
 
