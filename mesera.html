@@ -28,33 +28,63 @@
         <div class="tab-content mt-3">
             <div class="tab-pane fade show active" id="nuevaOrden">
                 <div class="card p-3">
-                    <h4>📋 Nueva Orden</h4>
-                    <p>Selecciona una mesa para tomar la orden.</p>
-                    <div class="mb-3">
-                        <label for="nombreMesera" class="form-label">👩‍🍳 Nombre de la Mesera:</label>
-                        <input type="text" class="form-control" id="nombreMesera" placeholder="Ingresa tu nombre">
-                        <br>
-                        <label for="notaPedido" class="form-label">📝 Agrega alguna nota especial:</label>
-                        <textarea id="notaPedido" placeholder="Nota del pedido"></textarea>
-                    </div>
-                    <div class="container text-center mt-3">
-                        <div class="row justify-content-center g-2" id="mesasContainer"></div>
-                    </div>
-                    <div id="pedidoContenido" class="mt-3 d-none">
-                        <h5>🍽 Comidas Disponibles para la <span id="mesaSeleccionada"></span></h5>
-                        <ul class="list-group" id="listaComidas"></ul>
-                        <h5 class="mt-3">🍹 Bebidas Disponibles</h5>
-                        <ul class="list-group" id="listaBebidas"></ul>
-                        <h5 class="mt-3">🍿 Snacks Disponibles</h5>
-                        <ul class="list-group" id="listaSnacks"></ul>
-                        <h5 class="mt-3"> Antojitos Disponibles</h5>
-                        <ul class="list-group" id="listaAntojitos"></ul>
-                    </div>
-                    <div class="text-center mt-4">
-                        <button class="btn btn-primary btn-lg" id="confirmarPedido">✅ Confirmar Pedido</button>
-                        <button class="btn btn-danger btn-lg" id="cancelarPedido">Cancelar Pedido</button>
-                    </div>
-                </div>
+    <h4>📋 Nueva Orden</h4>
+    <p>Selecciona una mesa para tomar la orden.</p>
+
+    <div class="mb-3">
+        <label for="nombreMesera" class="form-label">👩‍🍳 Nombre de la Mesera:</label>
+        <input type="text" class="form-control" id="nombreMesera" placeholder="Ingresa tu nombre">
+
+        <label for="notaPedido" class="form-label mt-3">📝 Agrega alguna nota especial:</label>
+        <textarea id="notaPedido" class="form-control" placeholder="Nota del pedido"></textarea>
+    </div>
+
+    <div class="container text-center mt-3">
+        <div class="row justify-content-center g-2" id="mesasContainer"></div>
+    </div>
+
+    <div id="pedidoContenido" class="mt-3 d-none">
+        <h5>🍽 Menú Disponible para la <span id="mesaSeleccionada"></span></h5>
+
+        <!-- Nav tabs -->
+        <ul class="nav nav-tabs" id="menuTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="comidas-tab" data-bs-toggle="tab" data-bs-target="#comidas" type="button" role="tab">🍽 Comidas</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="bebidas-tab" data-bs-toggle="tab" data-bs-target="#bebidas" type="button" role="tab">🍹 Bebidas</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="snacks-tab" data-bs-toggle="tab" data-bs-target="#snacks" type="button" role="tab">🍿 Snacks</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="antojitos-tab" data-bs-toggle="tab" data-bs-target="#antojitos" type="button" role="tab">🥙 Antojitos</button>
+            </li>
+        </ul>
+
+        <!-- Tab panes -->
+        <div class="tab-content p-3 border border-top-0">
+            <div class="tab-pane fade show active" id="comidas" role="tabpanel">
+                <ul class="list-group" id="listaComidas"></ul>
+            </div>
+            <div class="tab-pane fade" id="bebidas" role="tabpanel">
+                <ul class="list-group" id="listaBebidas"></ul>
+            </div>
+            <div class="tab-pane fade" id="snacks" role="tabpanel">
+                <ul class="list-group" id="listaSnacks"></ul>
+            </div>
+            <div class="tab-pane fade" id="antojitos" role="tabpanel">
+                <ul class="list-group" id="listaAntojitos"></ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="text-center mt-4">
+        <button class="btn btn-primary btn-lg" id="confirmarPedido">✅ Confirmar Pedido</button>
+        <button class="btn btn-danger btn-lg" id="cancelarPedido">Cancelar Pedido</button>
+    </div>
+</div>
+
             </div>
             <div class="tab-pane fade" id="ordenesPendientes">
                 <div class="card p-3">

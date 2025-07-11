@@ -196,6 +196,8 @@ function mostrarPedidosPorConfirmar(pedidos) {
 
     const pedidosFiltrados = pedidos.filter(pedido => {
         if (pedido.estado !== "listo") return false;
+        if (pedido.guardado === true) return false;
+
         const fechaPedido = new Date(pedido.fecha._seconds * 1000);
 
         return (
@@ -242,8 +244,16 @@ function mostrarPedidosPorConfirmar(pedidos) {
                 ${listaProductosHTML}
             </ul>
             <p><strong>Total:</strong> $${total.toFixed(2)}</p>
+
+           <label for="metodoPago-${pedido.id}"><strong>Método de Pago:</strong></label>
+<select id="metodoPago-${pedido.id}" class="form-select form-select-sm mb-2">
+    <option value="" disabled selected>Selecciona método de pago</option>
+    <option value="Efectivo">Efectivo</option>
+    <option value="Tarjeta">Tarjeta</option>
+</select>
+
             <button class="btn btn-primary btn-sm imprimir-ticket">🧾 Imprimir ticket</button>
-            <button class="btn btn-secondary btn-sm ocultar-pedido ms-2">Ocultar</button>
+            <button class="btn btn-success btn-sm ms-2 marcar-guardado">Guardar</button>
             <hr>
         `;
 
@@ -251,8 +261,36 @@ function mostrarPedidosPorConfirmar(pedidos) {
             imprimirTicket(pedido);
         });
 
-        card.querySelector(".ocultar-pedido").addEventListener("click", () => {
-            card.remove();
+        card.querySelector(".marcar-guardado").addEventListener("click", async () => {
+            const selectMetodoPago = document.getElementById(`metodoPago-${pedido.id}`);
+            const metodoPago = selectMetodoPago.value.trim();
+
+            if (!metodoPago) {
+                alert("Por favor, escribe el método de pago antes de guardar.");
+                selectMetodoPago.focus();
+                return;
+            }
+
+            try {
+                const response = await fetch(`${apiPedidos}/${pedido.id}/guardar`, {
+                    method: "PUT",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        guardado: true,
+                        metodo_Pago: metodoPago
+                    })
+                });
+
+                if (!response.ok) throw new Error("Error al marcar como guardado");
+
+                alert("✅ Pedido marcado como guardado exitosamente.");
+                card.remove();
+            } catch (error) {
+                alert("❌ No se pudo marcar el pedido como guardado.");
+                console.error(error);
+            }
         });
 
         lista.appendChild(card);
@@ -267,9 +305,7 @@ function imprimirTicket(pedido) {
     const fechaStr = fecha.toLocaleDateString();
     const horaStr = fecha.toLocaleTimeString();
 
-    // Agrupar productos por nombre
     const productosAgrupados = {};
-
     pedido.productos.forEach(p => {
         if (productosAgrupados[p.nombre]) {
             productosAgrupados[p.nombre].cantidad += p.cantidad || 1;
@@ -281,7 +317,6 @@ function imprimirTicket(pedido) {
         }
     });
 
-    // Construir filas HTML de la tabla
     let filasProductos = "";
     let total = 0;
 
@@ -310,11 +345,13 @@ function imprimirTicket(pedido) {
                     body {
                         font-family: monospace;
                         padding: 10px;
+                        margin: 0;
                         text-align: center;
                     }
                     img.logo {
                         width: 100px;
                         margin-bottom: 10px;
+                        margin: 0 auto 10px auto;
                     }
                     h2 {
                         margin: 0;
@@ -338,6 +375,14 @@ function imprimirTicket(pedido) {
                         margin-top: 10px;
                         text-align: right;
                     }
+                    .no-facturable {
+                        margin-top: 20px;
+                        padding: 8px;
+                        border: 2px dashed red;
+                        color: red;
+                        font-weight: bold;
+                        font-size: 14px;
+                    }
                     .saludo, .oferta {
                         margin-top: 15px;
                         font-size: 12px;
@@ -349,13 +394,14 @@ function imprimirTicket(pedido) {
                 </style>
             </head>
             <body>
-                <!-- ✅ Logotipo -->
                 <img src="https://felix2114.github.io/front-ldc/images/LosDosCar.jpeg" class="logo" alt="Logo"><br>
                 
-                <!-- ✅ Nombre y ubicación -->
-                <h2>Los Dos Carnales</h2>
+<div style="margin-top: 10px; margin-bottom: 10px;">
+    <h1 style="margin: 0; font-size: 20px; letter-spacing: 1px; font-weight: bold;">LOS DOS CARNALES</h1>
+    <p style="margin: 0; font-size: 12px; font-style: italic; color: #555;">Restaurante Familiar</p>
+</div>
 
-                <!-- ✅ Información del pedido -->
+
                 <div class="info">
                     <p>Atendió: ${pedido.mesera}</p>
                     <p>Mesa: ${pedido.mesaId || "N/A"}</p>
@@ -363,7 +409,6 @@ function imprimirTicket(pedido) {
                     <p>Hora: ${horaStr}</p>
                 </div>
 
-                <!-- ✅ Detalle de productos -->
                 <table>
                     <thead>
                         <tr>
@@ -378,21 +423,22 @@ function imprimirTicket(pedido) {
                     </tbody>
                 </table>
 
-                <!-- ✅ Total -->
                 <div class="total">TOTAL: $${total.toFixed(2)}</div>
 
-                <!-- ✅ Saludo y oferta -->
+                <!-- Caja de aviso -->
+                <div class="no-facturable">
+                    ESTE TICKET NO ES FACTURABLE
+                </div>
+
                 <div class="saludo">¡Muchas gracias por su visita!</div>
                 <div class="oferta">
                     Camino al barreal s/n, Colonia Santa Teresa<br>
                 </div>
 
-                <!-- ✅ Redes sociales -->
                 <div class="social">
-    <img src="https://upload.wikimedia.org/wikipedia/commons/5/51/Facebook_f_logo_%282019%29.svg" width="16" height="16" style="vertical-align:middle; margin-right:5px;">
-    Facebook Los Dos Carnales<br>
-</div>
-
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/5/51/Facebook_f_logo_%282019%29.svg" width="16" height="16" style="vertical-align:middle; margin-right:5px;">
+                    Facebook Los Dos Carnales<br>
+                </div>
 
                 <div class="saludo">
                     #somosLosDosCarnales👬
@@ -408,6 +454,7 @@ function imprimirTicket(pedido) {
         </html>
     `);
 }
+
 
 
 
@@ -507,7 +554,7 @@ function imprimirResumenVentas(pedidos) {
 
     if (!fechaSeleccionada) return;
 
-    // 🔧 Construimos fecha local (no UTC)
+    // Construimos fecha local (no UTC)
     const [year, month, day] = fechaSeleccionada.split("-");
     const fechaInput = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
 
@@ -533,27 +580,36 @@ function imprimirResumenVentas(pedidos) {
 
         const li = document.createElement("li");
         li.classList.add("list-group-item");
+
         li.innerHTML = `
             <strong>Mesera:</strong> ${pedido.mesera}<br>
             <strong>Total:</strong> $${pedido.total.toFixed(2)}<br>
+            <strong>Método de Pago:</strong> ${pedido.metodo_Pago}<br>
             <strong>Fecha:</strong> ${fechaFormateada}
         `;
 
+        // Crear botón Imprimir ticket
+        const btnImprimir = document.createElement("button");
+        btnImprimir.textContent = "Imprimir ticket";
+        btnImprimir.className = "btn btn-primary btn-sm ms-2";
+        btnImprimir.addEventListener("click", () => {
+            imprimirTicket(pedido);
+        });
+
+        li.appendChild(btnImprimir);
         listaVentas.appendChild(li);
     });
 
     totalVentas.textContent = total.toFixed(2);
 
-    const btnImprimir = document.createElement("button");
-    btnImprimir.textContent = "🖨️ Imprimir resumen";
-    btnImprimir.className = "btn btn-success mt-3";
-    btnImprimir.addEventListener("click", () => {
-        imprimirResumenVentas(pedidos); // 🔥 Llama a tu función existente
+    const btnImprimirResumen = document.createElement("button");
+    btnImprimirResumen.textContent = "🖨️ Imprimir resumen";
+    btnImprimirResumen.className = "btn btn-success mt-3";
+    btnImprimirResumen.addEventListener("click", () => {
+        imprimirResumenVentas(pedidos);
     });
 
-    listaVentas.appendChild(btnImprimir);
-
-   
+    listaVentas.appendChild(btnImprimirResumen);
 }
 
 

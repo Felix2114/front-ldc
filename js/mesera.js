@@ -718,6 +718,9 @@ const productosFormateados = Object.values(productosMap);
                 mesera: pedido.mesera || "Anónimo",
                 nota: pedido.nota || "",
                 total: total,
+                guardado : false,
+                metodo_Pago: "",
+                
             });
     
             // 2. Subcolección de productos
