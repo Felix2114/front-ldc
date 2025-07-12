@@ -459,7 +459,6 @@ function imprimirTicket(pedido) {
 
 
 
-
 function imprimirResumenVentas(pedidos) {
     const fechaSeleccionada = document.getElementById("fechaVentas").value;
 
@@ -474,7 +473,6 @@ function imprimirResumenVentas(pedidos) {
     const pedidosFiltrados = pedidos.filter(pedido => {
         if (pedido.estado !== "listo") return false;
         const fechaPedido = new Date(pedido.fecha._seconds * 1000);
-
         return (
             fechaPedido.getFullYear() === fechaInput.getFullYear() &&
             fechaPedido.getMonth() === fechaInput.getMonth() &&
@@ -488,20 +486,17 @@ function imprimirResumenVentas(pedidos) {
     }
 
     let total = 0;
+    let efectivo = 0;
+    let tarjeta = 0;
 
-    const detallesHTML = pedidosFiltrados.map(pedido => {
-        const fechaPedido = new Date(pedido.fecha._seconds * 1000);
-        const hora = fechaPedido.toLocaleTimeString();
+    pedidosFiltrados.forEach(pedido => {
         total += pedido.total;
-
-        return `
-            <li>
-                Mesera: ${pedido.mesera} |
-                Total: $${pedido.total.toFixed(2)} |
-                Hora: ${hora}
-            </li>
-        `;
-    }).join("");
+        if (pedido.metodo_Pago === "Efectivo") {
+            efectivo++;
+        } else if (pedido.metodo_Pago === "Tarjeta") {
+            tarjeta++;
+        }
+    });
 
     const ventana = window.open('', '', 'width=400,height=600');
     ventana.document.write(`
@@ -509,24 +504,79 @@ function imprimirResumenVentas(pedidos) {
             <head>
                 <title>Resumen de Ventas</title>
                 <style>
-                    body { font-family: monospace; padding: 10px; }
-                    h3, h4 { text-align: center; }
-                    ul { padding-left: 0; list-style: none; }
-                    li { margin: 5px 0; }
-                    .total { font-weight: bold; margin-top: 15px; text-align: center; }
+                    body {
+                        font-family: monospace;
+                        padding: 10px;
+                        margin: 0;
+                        text-align: center;
+                    }
+                    img.logo {
+                        width: 100px;
+                        margin-bottom: 10px;
+                        margin: 0 auto 10px auto;
+                    }
+                    h2 {
+                        margin: 0;
+                    }
+                    .info {
+                        text-align: left;
+                        margin: 10px 0;
+                    }
+                    table {
+                        width: 100%;
+                        border-collapse: collapse;
+                        margin: 10px 0;
+                    }
+                    th, td {
+                        border-bottom: 1px dashed #000;
+                        padding: 4px;
+                        text-align: center;
+                    }
+                    .total {
+                        font-weight: bold;
+                        margin-top: 10px;
+                        text-align: right;
+                    }
+                    .no-facturable {
+                        margin-top: 20px;
+                        padding: 8px;
+                        border: 2px dashed red;
+                        color: red;
+                        font-weight: bold;
+                        font-size: 14px;
+                    }
+                    .saludo, .oferta {
+                        margin-top: 15px;
+                        font-size: 12px;
+                    }
+                    .social {
+                        margin-top: 10px;
+                        font-size: 12px;
+                    }
+
+
                 </style>
             </head>
             <body>
-                <h3>Los Dos Carnales</h3>
+                <img src="https://felix2114.github.io/front-ldc/images/LosDosCar.jpeg" class="logo" alt="Logo"><br>
+                
+<div style="margin-top: 10px; margin-bottom: 10px;">
+    <h1 style="margin: 0; font-size: 20px; letter-spacing: 1px; font-weight: bold;">LOS DOS CARNALES</h1>
+    <p style="margin: 0; font-size: 12px; font-style: italic; color: #555;">Restaurante Familiar</p>
+</div>
                 <h4>Resumen de Ventas</h4>
                 <p><strong>Fecha:</strong> ${fechaSeleccionada}</p>
                 <hr>
-                <ul>
-                    ${detallesHTML}
-                </ul>
+                <p><strong>Total de pedidos:</strong> ${pedidosFiltrados.length}</p>
+                <p><strong>Total del día:</strong> $${total.toFixed(2)}</p>
+                <p><strong>Pedidos en Efectivo:</strong> ${efectivo}</p>
+                <p><strong>Pedidos con Tarjeta:</strong> ${tarjeta}</p>
                 <hr>
-                <p class="total">TOTAL DEL DÍA: $${total.toFixed(2)}</p>
                 <p style="text-align:center;">¡Gracias por su esfuerzo!</p>
+
+                <div class="saludo">
+                    #somosLosDosCarnales👬
+                </div>
                 <script>
                     window.onload = function() {
                         window.print();
@@ -537,8 +587,6 @@ function imprimirResumenVentas(pedidos) {
         </html>
     `);
 }
-
-
 
     
     
@@ -554,15 +602,12 @@ function imprimirResumenVentas(pedidos) {
 
     if (!fechaSeleccionada) return;
 
-    // Construimos fecha local (no UTC)
     const [year, month, day] = fechaSeleccionada.split("-");
     const fechaInput = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
 
     const pedidosFiltrados = pedidos.filter(pedido => {
         if (pedido.estado !== "listo") return false;
-
         const fechaPedido = new Date(pedido.fecha._seconds * 1000);
-
         return (
             fechaPedido.getFullYear() === fechaInput.getFullYear() &&
             fechaPedido.getMonth() === fechaInput.getMonth() &&
@@ -570,9 +615,14 @@ function imprimirResumenVentas(pedidos) {
         );
     });
 
+    // Ordenar de menor a mayor por fecha (más antiguo arriba)
+    pedidosFiltrados.sort((a, b) => a.fecha._seconds - b.fecha._seconds);
+
     let total = 0;
 
-    pedidosFiltrados.forEach(pedido => {
+    pedidosFiltrados.forEach((pedido, index) => {
+        const numeroPedido = index + 1;
+
         const fechaPedido = new Date(pedido.fecha._seconds * 1000);
         const fechaFormateada = fechaPedido.toLocaleString();
 
@@ -582,13 +632,13 @@ function imprimirResumenVentas(pedidos) {
         li.classList.add("list-group-item");
 
         li.innerHTML = `
+            <strong style="font-size: 20px;">Pedido #${numeroPedido}</strong><br>
             <strong>Mesera:</strong> ${pedido.mesera}<br>
             <strong>Total:</strong> $${pedido.total.toFixed(2)}<br>
             <strong>Método de Pago:</strong> ${pedido.metodo_Pago}<br>
             <strong>Fecha:</strong> ${fechaFormateada}
         `;
 
-        // Crear botón Imprimir ticket
         const btnImprimir = document.createElement("button");
         btnImprimir.textContent = "Imprimir ticket";
         btnImprimir.className = "btn btn-primary btn-sm ms-2";
@@ -597,6 +647,7 @@ function imprimirResumenVentas(pedidos) {
         });
 
         li.appendChild(btnImprimir);
+
         listaVentas.appendChild(li);
     });
 
@@ -611,6 +662,7 @@ function imprimirResumenVentas(pedidos) {
 
     listaVentas.appendChild(btnImprimirResumen);
 }
+
 
 
     function agregarFilaComida(producto, lista) {
