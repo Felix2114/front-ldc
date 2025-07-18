@@ -129,6 +129,7 @@ async function cargarOrdenes() {
                     <button class="btn btn-warning btn-sm me-1" id="editarPedido${pedido.id}">✏️ Editar</button>
                     <button class="btn btn-success btn-sm me-1" id="ordenEntregada${pedido.id}">✅ Orden Entregada</button>
                     <button class="btn btn-danger btn-sm" id="finalizarAtencion${pedido.id}">🛑 Finalizar Atención</button>
+                     <button class="btn btn-danger btn-sm" id="eliminarPedido${pedido.id}">🗑️ Eliminar</button>
                 </div>
             `;
 
@@ -151,6 +152,25 @@ async function cargarOrdenes() {
                     console.error("Error al marcar como entregado:", error);
                 }
             });
+
+
+            document.getElementById(`eliminarPedido${pedido.id}`).addEventListener("click", async () => {
+    const confirmar = confirm("¿Estás seguro de que quieres eliminar este pedido?");
+    if (!confirmar) return;
+
+    try {
+        await fetch(`${apiURL}/pedidos/eliminar/${pedido.id}`, {
+            method: "DELETE",
+            headers: { "Content-Type": "application/json" }
+        });
+        alert("Pedido eliminado exitosamente");
+        cargarOrdenes(); // recargar la lista
+    } catch (error) {
+        console.error("Error al eliminar pedido:", error);
+        alert("Ocurrió un error al eliminar el pedido.");
+    }
+});
+
 
             document.getElementById(`finalizarAtencion${pedido.id}`).addEventListener("click", async () => {
                 try {

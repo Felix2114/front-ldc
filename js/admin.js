@@ -606,7 +606,7 @@ function imprimirResumenVentas(pedidos) {
     const fechaInput = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
 
     const pedidosFiltrados = pedidos.filter(pedido => {
-        if (pedido.estado !== "listo") return false;
+        if (pedido.guardado !== true) return false;////////////////cambie esta linea para que se muestren solamente todos los guardados
         const fechaPedido = new Date(pedido.fecha._seconds * 1000);
         return (
             fechaPedido.getFullYear() === fechaInput.getFullYear() &&
