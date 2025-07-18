@@ -250,6 +250,7 @@ function mostrarPedidosPorConfirmar(pedidos) {
     <option value="" disabled selected>Selecciona método de pago</option>
     <option value="Efectivo">Efectivo</option>
     <option value="Tarjeta">Tarjeta</option>
+    <option value="Pendiente">Pendiente</option>
 </select>
 
             <button class="btn btn-primary btn-sm imprimir-ticket">🧾 Imprimir ticket</button>
@@ -458,7 +459,6 @@ function imprimirTicket(pedido) {
 
 
 
-
 function imprimirResumenVentas(pedidos) {
     const fechaSeleccionada = document.getElementById("fechaVentas").value;
 
@@ -488,13 +488,16 @@ function imprimirResumenVentas(pedidos) {
     let total = 0;
     let efectivo = 0;
     let tarjeta = 0;
+    let pendientes = 0;
 
     pedidosFiltrados.forEach(pedido => {
         total += pedido.total;
         if (pedido.metodo_Pago === "Efectivo") {
-            efectivo++;
+            efectivo += pedido.total;
         } else if (pedido.metodo_Pago === "Tarjeta") {
-            tarjeta++;
+            tarjeta += pedido.total;
+        } else {
+            pendientes += pedido.total;
         }
     });
 
@@ -504,79 +507,35 @@ function imprimirResumenVentas(pedidos) {
             <head>
                 <title>Resumen de Ventas</title>
                 <style>
-                    body {
-                        font-family: monospace;
-                        padding: 10px;
-                        margin: 0;
-                        text-align: center;
-                    }
-                    img.logo {
-                        width: 100px;
-                        margin-bottom: 10px;
-                        margin: 0 auto 10px auto;
-                    }
-                    h2 {
-                        margin: 0;
-                    }
-                    .info {
-                        text-align: left;
-                        margin: 10px 0;
-                    }
-                    table {
-                        width: 100%;
-                        border-collapse: collapse;
-                        margin: 10px 0;
-                    }
-                    th, td {
-                        border-bottom: 1px dashed #000;
-                        padding: 4px;
-                        text-align: center;
-                    }
-                    .total {
-                        font-weight: bold;
-                        margin-top: 10px;
-                        text-align: right;
-                    }
-                    .no-facturable {
-                        margin-top: 20px;
-                        padding: 8px;
-                        border: 2px dashed red;
-                        color: red;
-                        font-weight: bold;
-                        font-size: 14px;
-                    }
-                    .saludo, .oferta {
-                        margin-top: 15px;
-                        font-size: 12px;
-                    }
-                    .social {
-                        margin-top: 10px;
-                        font-size: 12px;
-                    }
-
-
+                    body { font-family: monospace; padding: 10px; margin: 0; text-align: center; }
+                    img.logo { width: 100px; margin-bottom: 10px; }
+                    h2 { margin: 0; }
+                    .info { text-align: left; margin: 10px 0; }
+                    table { width: 100%; border-collapse: collapse; margin: 10px 0; }
+                    th, td { border-bottom: 1px dashed #000; padding: 4px; text-align: center; }
+                    .total { font-weight: bold; margin-top: 10px; text-align: right; }
+                    .no-facturable { margin-top: 20px; padding: 8px; border: 2px dashed red; color: red; font-weight: bold; font-size: 14px; }
+                    .saludo { margin-top: 15px; font-size: 12px; }
                 </style>
             </head>
             <body>
                 <img src="https://felix2114.github.io/front-ldc/images/LosDosCar.jpeg" class="logo" alt="Logo"><br>
-                
-<div style="margin-top: 10px; margin-bottom: 10px;">
-    <h1 style="margin: 0; font-size: 20px; letter-spacing: 1px; font-weight: bold;">LOS DOS CARNALES</h1>
-    <p style="margin: 0; font-size: 12px; font-style: italic; color: #555;">Restaurante Familiar</p>
-</div>
+                <div style="margin-top: 10px; margin-bottom: 10px;">
+                    <h1 style="margin: 0; font-size: 20px; letter-spacing: 1px; font-weight: bold;">LOS DOS CARNALES</h1>
+                    <p style="margin: 0; font-size: 12px; font-style: italic; color: #555;">Restaurante Familiar</p>
+                </div>
                 <h4>Resumen de Ventas</h4>
                 <p><strong>Fecha:</strong> ${fechaSeleccionada}</p>
                 <hr>
                 <p><strong>Total de pedidos:</strong> ${pedidosFiltrados.length}</p>
                 <p><strong>Total del día:</strong> $${total.toFixed(2)}</p>
-                <p><strong>Pedidos en Efectivo:</strong> ${efectivo}</p>
-                <p><strong>Pedidos con Tarjeta:</strong> ${tarjeta}</p>
+                <p><strong>Total en Efectivo:</strong> $${efectivo.toFixed(2)}</p>
+                <p><strong>Total con Tarjeta:</strong> $${tarjeta.toFixed(2)}</p>
+                <p><strong>Total Pendientes:</strong> $${pendientes.toFixed(2)}</p>
                 <hr>
                 <p style="text-align:center;">¡Gracias por su esfuerzo!</p>
+                <div class="saludo">#somosLosDosCarnales👬</div>
 
-                <div class="saludo">
-                    #somosLosDosCarnales👬
-                </div>
                 <script>
                     window.onload = function() {
                         window.print();
@@ -587,15 +546,14 @@ function imprimirResumenVentas(pedidos) {
         </html>
     `);
 }
-
     
     
     
-
- function mostrarVentas(pedidos) {
+function mostrarVentas(pedidos) {
     const fechaSeleccionada = document.getElementById("fechaVentas").value;
     const listaVentas = document.getElementById("listaVentas");
     const totalVentas = document.getElementById("totalVentas");
+    
 
     listaVentas.innerHTML = "";
     totalVentas.textContent = "0.00";
@@ -606,7 +564,7 @@ function imprimirResumenVentas(pedidos) {
     const fechaInput = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
 
     const pedidosFiltrados = pedidos.filter(pedido => {
-        if (pedido.guardado !== true) return false;////////////////cambie esta linea para que se muestren solamente todos los guardados
+        if (pedido.guardado !== true) return false;
         const fechaPedido = new Date(pedido.fecha._seconds * 1000);
         return (
             fechaPedido.getFullYear() === fechaInput.getFullYear() &&
@@ -615,18 +573,27 @@ function imprimirResumenVentas(pedidos) {
         );
     });
 
-    // Ordenar de menor a mayor por fecha (más antiguo arriba)
     pedidosFiltrados.sort((a, b) => a.fecha._seconds - b.fecha._seconds);
 
     let total = 0;
+    let totalEfectivo = 0;
+    let totalTarjeta = 0;
+    let totalPendientes = 0;
 
     pedidosFiltrados.forEach((pedido, index) => {
         const numeroPedido = index + 1;
-
         const fechaPedido = new Date(pedido.fecha._seconds * 1000);
         const fechaFormateada = fechaPedido.toLocaleString();
 
         total += pedido.total;
+
+        if (pedido.metodo_Pago === "Efectivo") {
+            totalEfectivo += pedido.total;
+        } else if (pedido.metodo_Pago === "Tarjeta") {
+            totalTarjeta += pedido.total;
+        } else {
+            totalPendientes += pedido.total;
+        }
 
         const li = document.createElement("li");
         li.classList.add("list-group-item");
@@ -647,11 +614,20 @@ function imprimirResumenVentas(pedidos) {
         });
 
         li.appendChild(btnImprimir);
-
         listaVentas.appendChild(li);
     });
 
     totalVentas.textContent = total.toFixed(2);
+
+    const resumenTotales = document.createElement("div");
+    resumenTotales.className = "mt-3";
+    resumenTotales.innerHTML = `
+        <strong>Total Efectivo:</strong> $${totalEfectivo.toFixed(2)}<br>
+        <strong>Total Tarjeta:</strong> $${totalTarjeta.toFixed(2)}<br>
+        <strong>Total Pendientes:</strong> $${totalPendientes.toFixed(2)}
+    `;
+
+    listaVentas.appendChild(resumenTotales);
 
     const btnImprimirResumen = document.createElement("button");
     btnImprimirResumen.textContent = "🖨️ Imprimir resumen";
