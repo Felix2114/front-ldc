@@ -34,7 +34,13 @@ document.addEventListener("DOMContentLoaded", async () => {
     document.getElementById("confirmarPedido").addEventListener("click", mostrarPedido);
     
     const mesaEditando = document.getElementById("mesaEditando");
-
+     const inputBusqueda = document.getElementById("buscadorProductos");
+const listasProductos = [
+        document.getElementById("listaComidas"),
+        document.getElementById("listaBebidas"),
+        document.getElementById("listaSnacks"),
+        document.getElementById("listaAntojitos")
+    ];
 
 
 
@@ -55,6 +61,24 @@ document.addEventListener("DOMContentLoaded", async () => {
     } catch (error) {
         console.error("Error al cargar los pedidos:", error);
     }
+
+
+     inputBusqueda.addEventListener("input", () => {
+        const filtro = inputBusqueda.value.toLowerCase().trim();
+
+        listasProductos.forEach(lista => {
+            const items = lista.querySelectorAll("li");
+
+            items.forEach(item => {
+                const texto = item.textContent.toLowerCase();
+                if (texto.includes(filtro)) {
+                    item.classList.remove("d-none");
+                } else {
+                    item.classList.add("d-none");
+                }
+            });
+        });
+    });
 
 
      function cargarHistorialDelDia(pedidosListos) {
