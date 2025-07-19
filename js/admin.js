@@ -525,6 +525,7 @@ function imprimirResumenVentas(pedidos) {
                 </style>
             </head>
             <body>
+            
                 <img src="https://felix2114.github.io/front-ldc/images/LosDosCar.jpeg" class="logo" alt="Logo"><br>
                 <div style="margin-top: 10px; margin-bottom: 10px;">
                     <h1 style="margin: 0; font-size: 20px; letter-spacing: 1px; font-weight: bold;">LOS DOS CARNALES</h1>
