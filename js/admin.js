@@ -458,7 +458,6 @@ function imprimirTicket(pedido) {
 
 
 
-
 function imprimirResumenVentas(pedidos) {
     const fechaSeleccionada = document.getElementById("fechaVentas").value;
 
@@ -490,14 +489,21 @@ function imprimirResumenVentas(pedidos) {
     let tarjeta = 0;
     let pendientes = 0;
 
+    let countEfectivo = 0;
+    let countTarjeta = 0;
+    let countPendientes = 0;
+
     pedidosFiltrados.forEach(pedido => {
         total += pedido.total;
         if (pedido.metodo_Pago === "Efectivo") {
             efectivo += pedido.total;
+            countEfectivo++;
         } else if (pedido.metodo_Pago === "Tarjeta") {
             tarjeta += pedido.total;
+            countTarjeta++;
         } else {
             pendientes += pedido.total;
+            countPendientes++;
         }
     });
 
@@ -529,9 +535,9 @@ function imprimirResumenVentas(pedidos) {
                 <hr>
                 <p><strong>Total de pedidos:</strong> ${pedidosFiltrados.length}</p>
                 <p><strong>Total del día:</strong> $${total.toFixed(2)}</p>
-                <p><strong>Total en Efectivo:</strong> $${efectivo.toFixed(2)}</p>
-                <p><strong>Total con Tarjeta:</strong> $${tarjeta.toFixed(2)}</p>
-                <p><strong>Total Pendientes:</strong> $${pendientes.toFixed(2)}</p>
+                <p><strong>Total en Efectivo:</strong> $${efectivo.toFixed(2)} (${countEfectivo} pedidos)</p>
+                <p><strong>Total con Tarjeta:</strong> $${tarjeta.toFixed(2)} (${countTarjeta} pedidos)</p>
+                <p><strong>Total Pendientes:</strong> $${pendientes.toFixed(2)} (${countPendientes} pedidos)</p>
                 <hr>
                 <p style="text-align:center;">¡Gracias por su esfuerzo!</p>
                 <div class="saludo">#somosLosDosCarnales👬</div>
@@ -546,7 +552,7 @@ function imprimirResumenVentas(pedidos) {
         </html>
     `);
 }
-    
+
     
     
 function mostrarVentas(pedidos) {
