@@ -32,8 +32,16 @@
     <p>Selecciona una mesa para tomar la orden.</p>
 
     <div class="mb-3">
-        <label for="nombreMesera" class="form-label">👩‍🍳 Nombre de la Mesera:</label>
-        <input type="text" class="form-control" id="nombreMesera" placeholder="Ingresa tu nombre">
+     <label for="nombreMesera" class="form-label">👩‍🍳 Nombre de la Mesera:</label>
+<select class="form-control" id="nombreMesera">
+  <option value="">Selecciona una mesera</option>
+  <option value="Ninel">Ninel</option>
+  <option value="Caja">Caja</option>
+</select>
+
+         <label for="nombreMesera" class="form-label">Nombre del cliente:</label>
+        <input type="text" class="form-control" id="nombreCliente" placeholder="Ingresa el nombre del cliente">
+
 
         <label for="notaPedido" class="form-label mt-3">📝 Agrega alguna nota especial:</label>
         <textarea id="notaPedido" class="form-control" placeholder="Nota del pedido"></textarea>

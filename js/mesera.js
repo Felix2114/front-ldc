@@ -1,6 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
 import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
-import { getDocs, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+import { getDocs, updateDoc, doc, getDoc, increment } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyC_gRa6lymckHIrZQwUyQEfnuvT-oAOdwk",
@@ -42,6 +42,7 @@ const listasProductos = [
         document.getElementById("listaAntojitos")
     ];
 
+const folioGenerado = await obtenerYActualizarFolio();
 
 
 
@@ -145,6 +146,7 @@ async function cargarOrdenes() {
 
                 <h5>🪑 Mesa ${pedido.mesaId} - Mesera: ${pedido.mesera}</h5>
                 <p><strong>Nota:</strong> ${pedido.nota}</p>
+                <p><strong>Cliente:</strong> ${pedido.cliente}</p>
                 <ul>
                     ${listaProductosHTML}
                 </ul>
@@ -743,7 +745,9 @@ const productosFormateados = Object.values(productosMap);
 
 
             pedido.mesera = document.getElementById("nombreMesera").value;
+            pedido.cliente = document.getElementById("nombreCliente").value;
             pedido.nota = document.getElementById("notaPedido").value;
+
             // Validar que haya mesa seleccionada
             if (!pedido.mesa) {
                 alert("Selecciona una mesa antes de enviar el pedido.");
@@ -755,11 +759,13 @@ const productosFormateados = Object.values(productosMap);
     
             // 1. Crear el pedido principal
             const pedidoDocRef = await addDoc(collection(db, "pedidos"), {
+                folio: folioGenerado,
                 entregado: false,
                 estado: "pendiente",
                 fecha: new Date(),
                 mesaId: pedido.mesa.toString(),
                 mesera: pedido.mesera || "Anónimo",
+                cliente: pedido.cliente || "",
                 nota: pedido.nota || "",
                 total: total,
                 guardado : false,
@@ -797,6 +803,28 @@ const productosFormateados = Object.values(productosMap);
             alert("Ocurrió un error al enviar el pedido.");
         }
     }
+
+
+   
+
+async function obtenerYActualizarFolio() {
+    const folioRef = doc(db, "config", "folio");
+    const folioSnap = await getDoc(folioRef);
+
+    if (folioSnap.exists()) {
+        const data = folioSnap.data();
+        const nuevoFolio = data.ultimoFolio + 1;
+
+        // Actualizamos el folio en la base de datos
+        await updateDoc(folioRef, {
+            ultimoFolio: increment(1)  // ✅ evita condiciones de carrera
+        });
+
+        return nuevoFolio;
+    } else {
+        throw new Error("No se encontró el documento de folio");
+    }
+}
 
     
 

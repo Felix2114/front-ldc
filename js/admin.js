@@ -240,6 +240,7 @@ function mostrarPedidosPorConfirmar(pedidos) {
         card.innerHTML = `
             <h5>Mesa: ${pedido.mesaId || "Desconocida"}</h5>
             <p><strong>Mesera:</strong> ${pedido.mesera}</p>
+            <p><strong>Cliente:</strong> ${pedido.cliente}</p>
             <ul>
                 ${listaProductosHTML}
             </ul>
@@ -397,17 +398,19 @@ function imprimirTicket(pedido) {
             <body>
                 <img src="https://felix2114.github.io/front-ldc/images/LosDosCar.jpeg" class="logo" alt="Logo"><br>
                 
-<div style="margin-top: 10px; margin-bottom: 10px;">
-    <h1 style="margin: 0; font-size: 20px; letter-spacing: 1px; font-weight: bold;">LOS DOS CARNALES</h1>
-    <p style="margin: 0; font-size: 12px; font-style: italic; color: #555;">Restaurante Familiar</p>
-</div>
-
+                <div style="margin-top: 10px; margin-bottom: 10px;">
+                    <h1 style="margin: 0; font-size: 20px; letter-spacing: 1px; font-weight: bold;">LOS DOS CARNALES</h1>
+                    <p style="margin: 0; font-size: 12px; font-style: italic; color: #555;">Restaurante Familiar</p>
+                </div>
 
                 <div class="info">
-                    <p>Atendió: ${pedido.mesera}</p>
-                    <p>Mesa: ${pedido.mesaId || "N/A"}</p>
-                    <p>Fecha: ${fechaStr}</p>
-                    <p>Hora: ${horaStr}</p>
+                    <p><strong>Folio:</strong> ${pedido.folio || ""}</p>
+                    <p><strong>Atendió:</strong> ${pedido.mesera}</p>
+                    <p><strong>Mesa:</strong> ${pedido.mesaId || "N/A"}</p>
+                    <p><strong>Cliente:</strong> ${pedido.cliente || ""}</p>
+                    <p><strong>Fecha:</strong> ${fechaStr}</p>
+                    <p><strong>Hora:</strong> ${horaStr}</p>
+                    <p><strong>Envio:</strong> ___________</p>
                 </div>
 
                 <table>
@@ -426,7 +429,6 @@ function imprimirTicket(pedido) {
 
                 <div class="total">TOTAL: $${total.toFixed(2)}</div>
 
-                <!-- Caja de aviso -->
                 <div class="no-facturable">
                     ESTE TICKET NO ES FACTURABLE
                 </div>
@@ -608,6 +610,7 @@ function mostrarVentas(pedidos) {
         li.innerHTML = `
             <strong style="font-size: 20px;">Pedido #${numeroPedido}</strong><br>
             <strong>Mesera:</strong> ${pedido.mesera}<br>
+             <strong>Cliente:</strong> ${pedido.cliente}<br>
             <strong>Total:</strong> $${pedido.total.toFixed(2)}<br>
             <strong>Método de Pago:</strong> ${pedido.metodo_Pago}<br>
             <strong>Fecha:</strong> ${fechaFormateada}
