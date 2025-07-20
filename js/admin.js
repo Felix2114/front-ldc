@@ -1,4 +1,22 @@
 let pedidosListos = [];
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+import { getFirestore } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+import { updateDoc, doc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+const firebaseConfig = {
+    apiKey: "AIzaSyC_gRa6lymckHIrZQwUyQEfnuvT-oAOdwk",
+    authDomain: "l-d-c-2025.firebaseapp.com",
+    databaseURL: "https://l-d-c-2025-default-rtdb.firebaseio.com",
+    projectId: "l-d-c-2025",
+    storageBucket: "l-d-c-2025.firebasestorage.app",
+    messagingSenderId: "157848255104",
+    appId: "1:157848255104:web:d46a4b8d8ecf6e3b020465"
+  };
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+
 
 document.addEventListener("DOMContentLoaded", async () => {
     const apiURL = "https://api-ldc.onrender.com/menu";
@@ -557,12 +575,10 @@ function imprimirResumenVentas(pedidos) {
 }
 
     
-    
-function mostrarVentas(pedidos) {
+  function mostrarVentas(pedidos) {
     const fechaSeleccionada = document.getElementById("fechaVentas").value;
     const listaVentas = document.getElementById("listaVentas");
     const totalVentas = document.getElementById("totalVentas");
-    
 
     listaVentas.innerHTML = "";
     totalVentas.textContent = "0.00";
@@ -607,14 +623,41 @@ function mostrarVentas(pedidos) {
         const li = document.createElement("li");
         li.classList.add("list-group-item");
 
+        // Crear select dinámico
+        const selectMetodo = document.createElement("select");
+        selectMetodo.className = "form-select form-select-sm mt-1";
+        selectMetodo.innerHTML = `
+            <option value="Efectivo" ${pedido.metodo_Pago === "Efectivo" ? "selected" : ""}>Efectivo</option>
+            <option value="Tarjeta" ${pedido.metodo_Pago === "Tarjeta" ? "selected" : ""}>Tarjeta</option>
+            <option value="Pendiente" ${!pedido.metodo_Pago || pedido.metodo_Pago === "Pendiente" ? "selected" : ""}>Pendiente</option>
+        `;
+
+        // Listener para actualizar Firebase al cambiar el método
+        selectMetodo.addEventListener("change", async () => {
+            const nuevoMetodo = selectMetodo.value;
+            try {
+                const pedidoRef = doc(db, "pedidos", pedido.id); // Asegúrate que cada pedido tenga .id
+                await updateDoc(pedidoRef, { metodo_Pago: nuevoMetodo });
+                pedido.metodo_Pago = nuevoMetodo;
+                alert("Método de pago actualizado ✅");
+                mostrarVentas(pedidos); // refresca totales
+            } catch (error) {
+                console.error("Error al actualizar el método de pago:", error);
+                alert("❌ No se pudo actualizar el método de pago.");
+            }
+        });
+
         li.innerHTML = `
             <strong style="font-size: 20px;">Pedido #${numeroPedido}</strong><br>
+            <strong>Folio:</strong> ${pedido.folio}<br>
             <strong>Mesera:</strong> ${pedido.mesera}<br>
-             <strong>Cliente:</strong> ${pedido.cliente}<br>
+            <strong>Cliente:</strong> ${pedido.cliente}<br>
             <strong>Total:</strong> $${pedido.total.toFixed(2)}<br>
-            <strong>Método de Pago:</strong> ${pedido.metodo_Pago}<br>
-            <strong>Fecha:</strong> ${fechaFormateada}
+            <strong>Fecha:</strong> ${fechaFormateada}<br>
+            <strong>Método de Pago:</strong>
         `;
+
+        li.appendChild(selectMetodo);
 
         const btnImprimir = document.createElement("button");
         btnImprimir.textContent = "Imprimir ticket";
