@@ -86,3 +86,55 @@ textarea:focus {
     outline: none;
     box-shadow: 0 0 6px rgba(0, 123, 255, 0.25);
 }
+
+body {
+    font-size: 1.2rem; /* Aumenta el tamaño general de la fuente */
+    font-family: "Segoe UI", Roboto, sans-serif; /* Fuente moderna y legible */
+    line-height: 1.6;
+    background-color: #fefefe;
+    color: #333;
+}
+
+
+h2, h4, h5 {
+    font-weight: 600;
+    color: #4b3c2f;
+}
+
+.nav-tabs .nav-link {
+    font-size: 1.1rem;
+    padding: 10px 15px;
+    border-radius: 10px 10px 0 0;
+}
+
+.card {
+    border: none;
+    border-radius: 15px;
+    background: #fff;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+}
+
+.form-control {
+    font-size: 1.1rem;
+    border-radius: 10px;
+    border: 1px solid #ced4da;
+}
+body {
+    background-color: #faf6f1;
+    color: #4b3c2f;
+}
+
+.nav-tabs .nav-link.active {
+    background-color: #a7866d;
+    color: #fff;
+    border: none;
+}
+
+.btn-primary {
+    background-color: #6f4e37;
+    border: none;
+}
+
+.btn-primary:hover {
+    background-color: #54382b;
+}

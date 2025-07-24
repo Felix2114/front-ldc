@@ -55,8 +55,8 @@
         <h5>🍽 Menú Disponible para la <span id="mesaSeleccionada"></span></h5>
 
         <div class="my-3">
-    <input type="text" id="buscadorProductos" class="form-control" placeholder="Buscar productos...">
-</div>
+     <input type="text" id="buscadorProductos" class="form-control" placeholder="Buscar productos...">
+     </div>
 
 
         <!-- Nav tabs -->
@@ -136,40 +136,70 @@
 </div>
 
 
-
-<!--MODAL PARA EDITAR PEDIDOS-->
+<!-- MODAL PARA EDITAR PEDIDOS -->
 <div class="modal fade" id="editarPedidoModal" tabindex="-1" aria-labelledby="editarPedidoLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="editarPedidoLabel">✏️ Editar Pedido</h5>
-                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body">
-                <h5>Mesa: <span id="mesaEditando"></span></h5>
-                <div class="form-group mt-3">
-    <label for="notaEditar"><strong>📝 Nota del pedido:</strong></label>
-    <textarea class="form-control" id="notaEditar" rows="2" placeholder="Escribe una nota..."></textarea>
+  <div class="modal-dialog modal-xl modal-dialog-centered"> <!-- AUMENTADO A modal-xl -->
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="editarPedidoLabel">✏️ Editar Pedido</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+      <div class="modal-body">
+        <h5>Mesa: <span id="mesaEditando"></span></h5>
+
+        <!-- Campo para nota -->
+        <div class="form-group mt-3">
+          <label for="notaEditar"><strong>📝 Nota del pedido:</strong></label>
+          <textarea class="form-control" id="notaEditar" rows="2" placeholder="Escribe una nota..."></textarea>
+        </div>
+
+        <!-- Campo de búsqueda -->
+        <div class="my-3">
+          <input type="text" id="buscadorProductosEditar" class="form-control" placeholder="🔍 Buscar productos...">
+        </div>
+
+        <!-- Nav tabs -->
+        <ul class="nav nav-tabs mt-3" id="tabsEditarPedido" role="tablist">
+          <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="editar-comidas-tab" data-bs-toggle="tab" data-bs-target="#editar-comidas" type="button" role="tab">🍽 Comidas</button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" id="editar-bebidas-tab" data-bs-toggle="tab" data-bs-target="#editar-bebidas" type="button" role="tab">🍹 Bebidas</button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" id="editar-snacks-tab" data-bs-toggle="tab" data-bs-target="#editar-snacks" type="button" role="tab">🍿 Snacks</button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" id="editar-antojitos-tab" data-bs-toggle="tab" data-bs-target="#editar-antojitos" type="button" role="tab">🥙 Antojitos</button>
+          </li>
+        </ul>
+
+        <!-- Tab panes -->
+        <div class="tab-content p-3 border border-top-0">
+          <div class="tab-pane fade show active" id="editar-comidas" role="tabpanel">
+            <ul class="list-group" id="listaEditarComidas"></ul>
+          </div>
+          <div class="tab-pane fade" id="editar-bebidas" role="tabpanel">
+            <ul class="list-group" id="listaEditarBebidas"></ul>
+          </div>
+          <div class="tab-pane fade" id="editar-snacks" role="tabpanel">
+            <ul class="list-group" id="listaEditarSnacks"></ul>
+          </div>
+          <div class="tab-pane fade" id="editar-antojitos" role="tabpanel">
+            <ul class="list-group" id="listaEditarAntojitos"></ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="modal-footer">
+        <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-success" id="guardarEdicion">✅ Guardar Cambios</button>
+      </div>
+    </div>
+  </div>
 </div>
 
-                <h5>🍽 Comidas</h5>
-                <ul class="list-group" id="listaEditarComidas"></ul>
-                <h5 class="mt-3">🍹 Bebidas</h5>
-                <ul class="list-group" id="listaEditarBebidas"></ul>
-                <h5 class="mt-3">🍿 Snacks</h5>
-                <ul class="list-group" id="listaEditarSnacks"></ul>
-                <h5 class="mt-3">🍿 Antojitos</h5>
-                <ul class="list-group" id="listaEditarAntojitos"></ul>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Cancelar</button>
-                <button type="button" class="btn btn-success" id="guardarEdicion">✅ Guardar Cambios</button>
-            </div>
-        </div>
-    </div>
-</div>
 
 
 
