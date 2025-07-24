@@ -35,6 +35,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     
     const mesaEditando = document.getElementById("mesaEditando");
      const inputBusqueda = document.getElementById("buscadorProductos");
+     const inputBusquedaEditar = document.getElementById("buscadorProductosEditar");
+
 const listasProductos = [
         document.getElementById("listaComidas"),
         document.getElementById("listaBebidas"),
@@ -42,9 +44,18 @@ const listasProductos = [
         document.getElementById("listaAntojitos")
     ];
 
+    const listasProductosEditar = [
+        document.getElementById("listaEditarComidas"),
+        document.getElementById("listaEditarBebidas"),
+        document.getElementById("listaEditarSnacks"),
+       document.getElementById("listaEditarAntojitos")
+    ];
+
 const folioGenerado = await obtenerYActualizarFolio();
 
-
+ let pedidoEditar = {
+        items: []
+     };
 
 // CARGAR LOS PEDIDOS PENDIENTES Y LISTOS
     try {
@@ -68,6 +79,23 @@ const folioGenerado = await obtenerYActualizarFolio();
         const filtro = inputBusqueda.value.toLowerCase().trim();
 
         listasProductos.forEach(lista => {
+            const items = lista.querySelectorAll("li");
+
+            items.forEach(item => {
+                const texto = item.textContent.toLowerCase();
+                if (texto.includes(filtro)) {
+                    item.classList.remove("d-none");
+                } else {
+                    item.classList.add("d-none");
+                }
+            });
+        });
+    });
+
+    inputBusquedaEditar.addEventListener("input", () => {
+        const filtro = inputBusquedaEditar.value.toLowerCase().trim();
+
+        listasProductosEditar.forEach(lista => {
             const items = lista.querySelectorAll("li");
 
             items.forEach(item => {
@@ -278,9 +306,7 @@ async function cargarOrdenes() {
      };
     //console.log("Pedido recuperado:", pedidoActual.items); 
 
-     let pedidoEditar = {
-        items: []
-     };
+    
      //console.log("id pedido ediar",Pedido editar actualizado.items);
      //Pedido editar actualizado
 
@@ -658,26 +684,41 @@ const productosFormateados = Object.values(productosMap);
         const response = await fetch(`${apiURL}/mesas`);
         const mesas = await response.json();
 
-        // Limpiar contenedor
+        // Limpiar el contenedor de mesas
         mesasContainer.innerHTML = "";
 
-        // Filtrar solo mesas disponibles y ordenarlas
+        // Filtrar y ordenar las mesas disponibles
         const mesasDisponibles = mesas
             .filter(m => m.disponible)
             .sort((a, b) => a.numero - b.numero);
 
-        // Renderizar botones
+        if (mesasDisponibles.length === 0) {
+            mesasContainer.innerHTML = `
+                <div class="alert alert-warning" role="alert">
+                    No hay mesas disponibles en este momento. 🪑⏳
+                </div>`;
+            return;
+        }
+
+        // Crear botones para cada mesa disponible
         mesasDisponibles.forEach(mesa => {
             const btnMesa = document.createElement("button");
-            btnMesa.className = "btn btn-outline-primary m-2";
+            btnMesa.className = "mesa-btn m-2"; // Usa tu clase personalizada
             btnMesa.textContent = `Mesa ${mesa.numero}`;
+            btnMesa.setAttribute("aria-label", `Seleccionar mesa ${mesa.numero}`);
             btnMesa.onclick = () => seleccionarMesa(mesa.numero);
             mesasContainer.appendChild(btnMesa);
         });
+
     } catch (error) {
-        console.warn("⚠️ Error al cargar las mesas.", error);
+        console.error("⚠️ Error al cargar las mesas:", error);
+        mesasContainer.innerHTML = `
+            <div class="alert alert-danger" role="alert">
+                Ocurrió un error al cargar las mesas. Intenta nuevamente más tarde. ❌
+            </div>`;
     }
 }
+
 
 
     function seleccionarMesa(numero) {
