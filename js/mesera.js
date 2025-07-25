@@ -1,6 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
 import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
-import { getDocs, updateDoc, doc, getDoc, increment } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+import { getDocs, updateDoc, doc, getDoc, increment, runTransaction } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyC_gRa6lymckHIrZQwUyQEfnuvT-oAOdwk",
@@ -850,21 +850,24 @@ const productosFormateados = Object.values(productosMap);
 
 async function obtenerYActualizarFolio() {
     const folioRef = doc(db, "config", "folio");
-    const folioSnap = await getDoc(folioRef);
 
-    if (folioSnap.exists()) {
-        const data = folioSnap.data();
-        const nuevoFolio = data.ultimoFolio + 1;
+    const nuevoFolio = await runTransaction(db, async (transaction) => {
+        const folioDoc = await transaction.get(folioRef);
 
-        // Actualizamos el folio en la base de datos
-        await updateDoc(folioRef, {
-            ultimoFolio: increment(1)  // ✅ evita condiciones de carrera
-        });
+        if (!folioDoc.exists()) {
+            throw "Documento de folio no existe.";
+        }
 
-        return nuevoFolio;
-    } else {
-        throw new Error("No se encontró el documento de folio");
-    }
+        const data = folioDoc.data();
+        const ultimoFolio = data.ultimoFolio || 0;
+        const siguienteFolio = ultimoFolio + 1;
+
+        transaction.update(folioRef, { ultimoFolio: siguienteFolio });
+
+        return siguienteFolio;
+    });
+
+    return nuevoFolio;
 }
 
     

@@ -598,7 +598,9 @@ function imprimirResumenVentas(pedidos) {
         );
     });
 
-    pedidosFiltrados.sort((a, b) => a.fecha._seconds - b.fecha._seconds);
+    //pedidosFiltrados.sort((a, b) => a.fecha._seconds - b.fecha._seconds);
+    pedidosFiltrados.sort((a, b) => a.folio - b.folio);
+
 
     let total = 0;
     let totalEfectivo = 0;
