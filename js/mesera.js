@@ -802,6 +802,7 @@ const productosFormateados = Object.values(productosMap);
 
     
 
+
     //ENVIAR PEDIDO POR EL MODAL A LA BASE DE DATOS
  async function enviarPedido(pedido) {
     try {
@@ -860,7 +861,6 @@ const productosFormateados = Object.values(productosMap);
 
 
    
-
 
 
     //RESTAR A BEBIDAS
