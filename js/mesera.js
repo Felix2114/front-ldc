@@ -51,8 +51,6 @@ const listasProductos = [
        document.getElementById("listaEditarAntojitos")
     ];
 
-const folioGenerado = await obtenerYActualizarFolio();
-
  let pedidoEditar = {
         items: []
      };
@@ -780,75 +778,7 @@ const productosFormateados = Object.values(productosMap);
         }
     }
 
-    //ENVIAR PEDIDO POR EL MODAL A LA BASE DE DATOS
-    async function enviarPedido(pedido) {
-        try {
-
-
-            pedido.mesera = document.getElementById("nombreMesera").value;
-            pedido.cliente = document.getElementById("nombreCliente").value;
-            pedido.nota = document.getElementById("notaPedido").value;
-
-            // Validar que haya mesa seleccionada
-            if (!pedido.mesa) {
-                alert("Selecciona una mesa antes de enviar el pedido.");
-                return;
-            }
-    
-            // Calcular total
-            const total = pedido.items.reduce((acc, item) => acc + item.cantidad * item.precio, 0);
-    
-            // 1. Crear el pedido principal
-            const pedidoDocRef = await addDoc(collection(db, "pedidos"), {
-                folio: folioGenerado,
-                entregado: false,
-                estado: "pendiente",
-                fecha: new Date(),
-                mesaId: pedido.mesa.toString(),
-                mesera: pedido.mesera || "Anónimo",
-                cliente: pedido.cliente || "",
-                nota: pedido.nota || "",
-                total: total,
-                guardado : false,
-                metodo_Pago: "",
-                
-            });
-    
-            // 2. Subcolección de productos
-            const productosRef = collection(pedidoDocRef, "productos");
-    
-            for (const item of pedido.items) {
-                await addDoc(productosRef, {
-                    nombre: item.nombre,
-                    cantidad: item.cantidad,
-                    precio: item.precio,
-                    subtotal: item.cantidad * item.precio,
-                    estado: false,
-                    
-                });
-    
-                // 3. Si es bebida, actualizamos inventario
-                await actualizarInventarioBebida(item.nombre, item.cantidad);
-            }
-    
-            // 4. Marcar la mesa como ocupada en la base de datos
-            await actualizarEstadoMesa(pedido.mesa);
-    
-            // 5. Limpiar pedido localalert("✅ Pedido enviado correctamente.");
-            
-            alert("Pedido enviado correctamente");
-            window.location.reload();
-    
-        } catch (error) {
-            console.error(" Error al enviar el pedido:", error);
-            alert("Ocurrió un error al enviar el pedido.");
-        }
-    }
-
-
-   
-
-async function obtenerYActualizarFolio() {
+    async function obtenerYActualizarFolio() {
     const folioRef = doc(db, "config", "folio");
 
     const nuevoFolio = await runTransaction(db, async (transaction) => {
@@ -871,6 +801,66 @@ async function obtenerYActualizarFolio() {
 }
 
     
+
+
+    //ENVIAR PEDIDO POR EL MODAL A LA BASE DE DATOS
+ async function enviarPedido(pedido) {
+    try {
+        pedido.mesera = document.getElementById("nombreMesera").value;
+        pedido.cliente = document.getElementById("nombreCliente").value;
+        pedido.nota = document.getElementById("notaPedido").value;
+
+        if (!pedido.mesa) {
+            alert("Selecciona una mesa antes de enviar el pedido.");
+            return;
+        }
+
+        const total = pedido.items.reduce((acc, item) => acc + item.cantidad * item.precio, 0);
+
+        // ✅ Generar folio justo antes de guardar
+        const folio = await obtenerYActualizarFolio();
+
+        const pedidoDocRef = await addDoc(collection(db, "pedidos"), {
+            folio: folio,
+            entregado: false,
+            estado: "pendiente",
+            fecha: new Date(),
+            mesaId: pedido.mesa.toString(),
+            mesera: pedido.mesera || "Anónimo",
+            cliente: pedido.cliente || "",
+            nota: pedido.nota || "",
+            total: total,
+            guardado: false,
+            metodo_Pago: "",
+        });
+
+        const productosRef = collection(pedidoDocRef, "productos");
+
+        for (const item of pedido.items) {
+            await addDoc(productosRef, {
+                nombre: item.nombre,
+                cantidad: item.cantidad,
+                precio: item.precio,
+                subtotal: item.cantidad * item.precio,
+                estado: false,
+            });
+
+            await actualizarInventarioBebida(item.nombre, item.cantidad);
+        }
+
+        await actualizarEstadoMesa(pedido.mesa);
+
+        alert("✅ Pedido enviado correctamente");
+        window.location.reload();
+
+    } catch (error) {
+        console.error("❌ Error al enviar el pedido:", error);
+        alert("Ocurrió un error al enviar el pedido.");
+    }
+}
+
+
+   
 
 
     //RESTAR A BEBIDAS
