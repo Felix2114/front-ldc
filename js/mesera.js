@@ -872,6 +872,7 @@ async function obtenerYActualizarFolio() {
 
     
 
+
     //RESTAR A BEBIDAS
     async function actualizarInventarioBebida(nombre, cantidadUsada) {
         try {
