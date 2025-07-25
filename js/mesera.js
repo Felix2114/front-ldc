@@ -800,7 +800,7 @@ const productosFormateados = Object.values(productosMap);
     return nuevoFolio;
 }
 
-    
+     
 
 
     //ENVIAR PEDIDO POR EL MODAL A LA BASE DE DATOS
