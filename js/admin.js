@@ -904,5 +904,5 @@ function imprimirResumenVentas(pedidos) {
 
     // Iniciar carga de datos al abrir la página
     cargarDatos();
-     setInterval(cargarDatos, 5000);
+     setInterval(cargarDatos, 15000);
 });

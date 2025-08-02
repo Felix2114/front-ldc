@@ -76,5 +76,5 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     // ✅ Carga inicial y actualizaciones en tiempo real
     await cargarDatos();
-    setInterval(cargarDatos, 5000); // Actualiza cada 5 segundos
+    setInterval(cargarDatos, 15000); // Actualiza cada 5 segundos
 });

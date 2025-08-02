@@ -979,18 +979,21 @@ const productosFormateados = Object.values(productosMap);
     }
 
 
-    await cargarMesas();
-    await cargarMenu();
-    await cargarMenuEditar();
-    await cargarOrdenes();
-    //await cargarHistorialDelDia();
-    setInterval(() => {  
-        cargarMenu();
-        cargarMesas();
-         cargarMenuEditar();
-         cargarOrdenes();
-        // cargarHistorialDelDia();
+    async function actualizarDatos() {
+  await Promise.all([
+    cargarMenu(),
+    cargarMesas(),
+    cargarMenuEditar(),
+    cargarOrdenes()
+  ]);
 
-    }, 5000);
+  setTimeout(actualizarDatos, 15000); // espera 15s y vuelve a ejecutar
+}
+
+actualizarDatos(); // inicia la primera vez
+
+
+
+
     
 });
