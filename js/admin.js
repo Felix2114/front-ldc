@@ -902,7 +902,22 @@ function imprimirResumenVentas(pedidos) {
     });
 
 
+    let intervaloActualizacion;
+
     // Iniciar carga de datos al abrir la página
     cargarDatos();
      setInterval(cargarDatos, 15000);
+
+
+     document.addEventListener("focusin", (e) => {
+    if (e.target.tagName === "SELECT" && e.target.id.startsWith("metodoPago-")) {
+        clearInterval(intervaloActualizacion);
+    }
+});
+
+document.addEventListener("focusout", (e) => {
+    if (e.target.tagName === "SELECT" && e.target.id.startsWith("metodoPago-")) {
+        intervaloActualizacion = setInterval(cargarDatos, 15000);
+    }
+    });
 });
