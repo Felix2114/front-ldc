@@ -55,6 +55,15 @@ const listasProductos = [
         items: []
      };
 
+      let pedidoActual = {
+        items: []
+     };
+
+      cargarMesas();
+       cargarMenu();
+//setInterval(cargarMesas, 15000);
+  
+
 // CARGAR LOS PEDIDOS PENDIENTES Y LISTOS
     try {
         // GET pedidos con estado pendiente
@@ -299,9 +308,7 @@ async function cargarOrdenes() {
 
 
 
-     let pedidoActual = {
-        items: []
-     };
+    
     //console.log("Pedido recuperado:", pedidoActual.items); 
 
     
