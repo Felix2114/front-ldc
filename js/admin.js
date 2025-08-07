@@ -1,4 +1,6 @@
 let pedidosListos = [];
+let bebidasGlobal = [];
+
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
 import { getFirestore } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 import { updateDoc, doc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
@@ -30,7 +32,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const listaBebidas = document.getElementById("tablaBebidas");
     const listaMesas = document.getElementById("listaMesas");
  document.getElementById("fechaVentas").valueAsDate = new Date();
-await cargarDatos();
+
 
     // Escuchar cambios en la fecha
     document.getElementById("fechaVentas").addEventListener("change", () => {
@@ -45,8 +47,23 @@ await cargarDatos();
     const dd = String(hoy.getDate()).padStart(2, "0");
 
     fechaInput.value = `${yyyy}-${mm}-${dd}`;
+
+    await cargarPedidosListosYMostrarConfirmar();
+     await cargarDatos();
   
 
+
+
+     async function cargarPedidosListosYMostrarConfirmar() {
+    try {
+        const res = await fetch(`${apiPedidos}/estado/listo`);
+        const pedidosListosData = await res.json();
+        pedidosListos = pedidosListosData;
+        mostrarPedidosPorConfirmar(pedidosListosData);
+    } catch (error) {
+        console.error("Error al cargar pedidos listos:", error);
+    }
+}
 
     async function cargarDatos() {
         try {
@@ -67,11 +84,12 @@ await cargarDatos();
             ]);
 
            //  pedidosGlobal = pedidosListos;
+            bebidasGlobal = inventario;
            pedidosListos = pedidosListosData;
             mostrarMenu(menu);
             mostrarInventario(inventario);
            // mostrarVentas(pedidosListos);
-            mostrarPedidosPorConfirmar(pedidosListosData);
+          //  mostrarPedidosPorConfirmar(pedidosListosData);
             mostrarMesas(mesas);
 
            mostrarVentas(pedidosListos);
@@ -193,14 +211,36 @@ await cargarDatos();
         antojitos.forEach(antojitos => agregarFilaComida(antojitos, listaAntojitos));
     }
 
-    function mostrarInventario(inventario) {
-        listaBebidas.innerHTML = "";
-        if (Array.isArray(inventario)) {
-            inventario.forEach(bebida => agregarFilaBebida(bebida));
-        } else {
-            console.error("Inventario inválido");
-        }
+   function mostrarInventario(inventario) {
+    listaBebidas.innerHTML = "";
+
+    if (Array.isArray(inventario)) {
+        inventario.forEach(bebida => agregarFilaBebida(bebida));
+        
+        // Eliminar botón si ya existe para evitar duplicados
+        const botonExistente = listaBebidas.parentElement.querySelector("#btnImprimirInventario");
+        if (botonExistente) botonExistente.remove();
+
+        // Crear botón con estilos
+        const boton = document.createElement("button");
+        boton.id = "btnImprimirInventario";
+        boton.textContent = "Imprimir Inventario";
+        
+        // Bootstrap styles (puedes ajustar si usas otro framework)
+        boton.className = "btn btn-success btn-sm mt-3";
+        boton.style.display = "block"; // Que tome línea propia
+        boton.style.marginLeft = "auto"; // Para alinear a la derecha
+        boton.style.marginRight = "0";
+
+        boton.onclick = () => imprimirTicketInventario(inventario);
+
+        listaBebidas.parentElement.appendChild(boton);
+
+    } else {
+        console.error("Inventario inválido");
     }
+}
+
 
 function mostrarPedidosPorConfirmar(pedidos) {
     const lista = document.getElementById("listaPedidosPorConfirmar");
@@ -476,6 +516,97 @@ function imprimirTicket(pedido) {
     `);
 }
 
+
+function imprimirTicketInventario(bebidasGlobal) {
+    const fecha = new Date();
+    const fechaStr = fecha.toLocaleDateString();
+    const horaStr = fecha.toLocaleTimeString();
+
+    let filas = "";
+    bebidasGlobal.forEach(b => {
+        filas += `
+            <tr>
+                <td>${b.nombre}</td>
+                <td>${b.stock}</td>
+                <td>$${parseFloat(b.precio).toFixed(2)}</td>
+            </tr>
+        `;
+    });
+
+    const ventana = window.open('', '', 'width=400,height=700');
+
+    ventana.document.write(`
+        <html>
+            <head>
+                <title>Inventario</title>
+                <style>
+                    body {
+                        font-family: monospace;
+                        padding: 10px;
+                        text-align: center;
+                        margin: 0;
+                    }
+                    img.logo {
+                        width: 100px;
+                        margin: 0 auto 10px auto;
+                    }
+                    h2 {
+                        margin: 0;
+                    }
+                    .info {
+                        text-align: left;
+                        margin: 10px 0;
+                    }
+                    table {
+                        width: 100%;
+                        border-collapse: collapse;
+                        margin-top: 10px;
+                    }
+                    th, td {
+                        border-bottom: 1px dashed #000;
+                        padding: 4px;
+                        text-align: center;
+                    }
+                    .saludo {
+                        margin-top: 15px;
+                        font-size: 12px;
+                    }
+                </style>
+            </head>
+            <body>
+                <img src="https://felix2114.github.io/front-ldc/images/LosDosCar.jpeg" class="logo" alt="Logo"><br>
+                <h2>INVENTARIO DE BEBIDAS</h2>
+                
+                <div class="info">
+                    <p><strong>Fecha:</strong> ${fechaStr}</p>
+                    <p><strong>Hora:</strong> ${horaStr}</p>
+                </div>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Nombre</th>
+                            <th>Stock</th>
+                            <th>Precio</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${filas}
+                    </tbody>
+                </table>
+
+                <div class="saludo">¡Revisa el inventario con tiempo!</div>
+
+                <script>
+                    window.onload = function() {
+                        window.print();
+                        setTimeout(() => window.close(), 500);
+                    }
+                </script>
+            </body>
+        </html>
+    `);
+}
 
 
 function imprimirResumenVentas(pedidos) {
