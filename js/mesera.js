@@ -811,13 +811,22 @@ const productosFormateados = Object.values(productosMap);
 
 
     //ENVIAR PEDIDO POR EL MODAL A LA BASE DE DATOS
- async function enviarPedido(pedido) {
+ // ENVIAR PEDIDO POR EL MODAL A LA BASE DE DATOS
+async function enviarPedido(pedido) {
+    const overlay = document.getElementById("overlay");
+    const overlayContent = document.getElementById("overlayContent");
+
     try {
+        // Mostrar overlay con animación de carga
+        overlay.style.display = "flex";
+        overlayContent.innerHTML = `<div class="loader"></div><p class="mt-3">Enviando pedido...</p>`;
+
         pedido.mesera = document.getElementById("nombreMesera").value;
         pedido.cliente = document.getElementById("nombreCliente").value;
         pedido.nota = document.getElementById("notaPedido").value;
 
         if (!pedido.mesa) {
+            overlay.style.display = "none";
             alert("Selecciona una mesa antes de enviar el pedido.");
             return;
         }
@@ -857,14 +866,21 @@ const productosFormateados = Object.values(productosMap);
 
         await actualizarEstadoMesa(pedido.mesa);
 
-        alert("✅ Pedido enviado correctamente");
-        window.location.reload();
+        // Mostrar palomita de éxito
+        overlayContent.innerHTML = `<div class="checkmark">✅</div><p class="mt-3">Pedido enviado</p>`;
+
+        // Recargar después de 1.5 segundos
+        setTimeout(() => {
+            window.location.reload();
+        }, 1500);
 
     } catch (error) {
         console.error("❌ Error al enviar el pedido:", error);
+        overlay.style.display = "none";
         alert("Ocurrió un error al enviar el pedido.");
     }
 }
+
 
 
    
