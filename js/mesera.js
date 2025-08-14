@@ -851,6 +851,7 @@ async function enviarPedido(pedido) {
             nota: pedido.nota || "",
             total: total,
             guardado: false,
+            descuento: "",
             metodo_Pago: "",
         });
 

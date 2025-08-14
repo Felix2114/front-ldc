@@ -146,28 +146,39 @@ fechaInput.value = hoy.toISOString().split('T')[0]; // Solo toma la parte de la 
             }
 
             // Guardar método de pago
-            if (e.target.classList.contains("marcar-guardado")) {
-                const select = card.querySelector(".metodo-pago");
-                const metodoPago = select.value.trim();
-                if (!metodoPago) {
-                    alert("Por favor, selecciona el método de pago antes de guardar.");
-                    select.focus();
-                    return;
-                }
+            // Guardar método de pago y descuento
+if (e.target.classList.contains("marcar-guardado")) {
+    const selectMetodo = card.querySelector(".metodo-pago");
+    const selectDescuento = card.querySelector(".descuento");
 
-                try {
-                    const response = await fetch(`${apiPedidos}/${id}/guardar`, {
-                        method: "PUT",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ guardado: true, metodo_Pago: metodoPago })
-                    });
-                    if (!response.ok) throw new Error("Error al marcar como guardado");
-                    card.remove();
-                } catch (err) {
-                    console.error(err);
-                    alert("❌ No se pudo marcar el pedido como guardado.");
-                }
-            }
+    const metodoPago = selectMetodo.value.trim();
+    const descuento = selectDescuento.value.trim();
+
+    if (!metodoPago) {
+        alert("Por favor, selecciona el método de pago antes de guardar.");
+        selectMetodo.focus();
+        return;
+    }
+
+    try {
+        const response = await fetch(`${apiPedidos}/${id}/guardar`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                guardado: true,
+                metodo_Pago: metodoPago,
+                descuento: descuento || null // null si no selecciona nada
+            })
+        });
+
+        if (!response.ok) throw new Error("Error al marcar como guardado");
+        card.remove();
+    } catch (err) {
+        console.error(err);
+        alert("❌ No se pudo marcar el pedido como guardado.");
+    }
+}
+
 
             // Eliminar pedido
             if (e.target.classList.contains("eliminar")) {
