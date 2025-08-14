@@ -31,7 +31,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const listaAntojitos = document.getElementById("tablaAntojitos");
     const listaBebidas = document.getElementById("tablaBebidas");
     const listaMesas = document.getElementById("listaMesas");
- document.getElementById("fechaVentas").valueAsDate = new Date();
+    document.getElementById("fechaVentas").valueAsDate = new Date();
 
 
     // Escuchar cambios en la fecha
@@ -39,59 +39,185 @@ document.addEventListener("DOMContentLoaded", async () => {
         mostrarVentas(pedidosListos);
     });
 
-    const fechaInput = document.getElementById("fechaConfirmar");
-    
-    const hoy = new Date();
-    const yyyy = hoy.getFullYear();
-    const mm = String(hoy.getMonth() + 1).padStart(2, "0");
-    const dd = String(hoy.getDate()).padStart(2, "0");
+   const fechaInput = document.getElementById("fechaConfirmar");
 
-    fechaInput.value = `${yyyy}-${mm}-${dd}`;
+// Obtener la fecha actual y formatearla a YYYY-MM-DD
+const hoy = new Date();
+fechaInput.value = hoy.toISOString().split('T')[0]; // Solo toma la parte de la fecha
 
-    await cargarPedidosListosYMostrarConfirmar();
-     await cargarDatos();
-  
+    cargarPedidosListosYMostrarConfirmar();
+    setInterval(cargarPedidosListosYMostrarConfirmar, 20000);
 
+    // ⏳ Cargar el resto de datos en segundo plano
+    cargarDatos();
+    setInterval(cargarDatos, 40000);
 
+    async function cargarPedidosListosYMostrarConfirmar() {
+    const lista = document.getElementById("listaPedidosPorConfirmar");
+    const fechaSeleccionada = document.getElementById("fechaConfirmar").value;
 
-     async function cargarPedidosListosYMostrarConfirmar() {
+    if (!fechaSeleccionada) {
+        lista.innerHTML = "<p>Selecciona una fecha.</p>";
+        return;
+    }
+
+    // Mostrar cargando
+    lista.innerHTML = "<p>Cargando pedidos...</p>";
+
     try {
-        const res = await fetch(`${apiPedidos}/estado/listo`);
-        const pedidosListosData = await res.json();
-        pedidosListos = pedidosListosData;
-        mostrarPedidosPorConfirmar(pedidosListosData);
-    } catch (error) {
-        console.error("Error al cargar pedidos listos:", error);
+        const res = await fetch(`${apiPedidos}/estado/listo/fecha/${fechaSeleccionada}`);
+        if (!res.ok) throw new Error("Error al obtener pedidos");
+
+        const pedidos = await res.json();
+        pedidosListos = pedidos;
+        if (!pedidos.length) {
+            lista.innerHTML = "<p>No hay pedidos para esta fecha.</p>";
+            return;
+        }
+
+        const fragment = document.createDocumentFragment();
+
+        pedidos.forEach(pedido => {
+            const productosAgrupados = pedido.productos.reduce((acc, prod) => {
+                if (!acc[prod.nombre]) acc[prod.nombre] = { cantidad: 0, precio: prod.precio };
+                acc[prod.nombre].cantidad += prod.cantidad;
+                return acc;
+            }, {});
+
+            let total = 0;
+            const listaProductosHTML = Object.entries(productosAgrupados)
+                .map(([nombre, { cantidad, precio }]) => {
+                    const subtotal = cantidad * precio;
+                    total += subtotal;
+                    return `<li>${nombre} x${cantidad} - $${precio.toFixed(2)} c/u = $${subtotal.toFixed(2)}</li>`;
+                })
+                .join("");
+
+            const card = document.createElement("div");
+            card.className = "pedido-card p-2 mb-2 border rounded";
+            card.dataset.id = pedido.id;
+
+            card.innerHTML = `
+                <h5>Mesa: ${pedido.mesaId || "Desconocida"}</h5>
+                <p><strong>Mesera:</strong> ${pedido.mesera}</p>
+                <p><strong>Cliente:</strong> ${pedido.cliente}</p>
+                <ul>${listaProductosHTML}</ul>
+                <p><strong>Total:</strong> $${total.toFixed(2)}</p>
+
+                <label><strong>Método de Pago:</strong></label>
+                <select class="form-select form-select-sm mb-2 metodo-pago">
+                    <option value="" disabled selected>Selecciona método de pago</option>
+                    <option value="Efectivo">Efectivo</option>
+                    <option value="Tarjeta">Tarjeta</option>
+                    <option value="Pendiente">Pendiente</option>
+                </select>
+
+                 <label><strong>Aplicar Descuento:</strong></label>
+                <select class="form-select form-select-sm mb-2 descuento">
+                    <option value="" disabled selected>Selecciona algun descuento</option>
+                    <option value="Descuento DosCarnales">Descuento DosCarnales</option>
+                    
+                </select>
+
+                <div class="d-flex gap-2">
+                    <button class="btn btn-primary btn-sm imprimir-ticket">🧾 Imprimir ticket</button>
+                    <button class="btn btn-success btn-sm marcar-guardado">Guardar</button>
+                    <button class="btn btn-danger btn-sm ms-auto eliminar">🗑️ Eliminar</button>
+                </div>
+                <hr>
+            `;
+
+            fragment.appendChild(card);
+        });
+
+        lista.innerHTML = "";
+        lista.appendChild(fragment);
+
+        // Delegación de eventos para todos los botones dentro del contenedor
+        lista.onclick = async (e) => {
+            const card = e.target.closest(".pedido-card");
+            if (!card) return;
+            const id = card.dataset.id;
+            const pedido = pedidos.find(p => p.id === id);
+
+            // Imprimir ticket
+            if (e.target.classList.contains("imprimir-ticket")) {
+                imprimirTicket(pedido);
+            }
+
+            // Guardar método de pago
+            if (e.target.classList.contains("marcar-guardado")) {
+                const select = card.querySelector(".metodo-pago");
+                const metodoPago = select.value.trim();
+                if (!metodoPago) {
+                    alert("Por favor, selecciona el método de pago antes de guardar.");
+                    select.focus();
+                    return;
+                }
+
+                try {
+                    const response = await fetch(`${apiPedidos}/${id}/guardar`, {
+                        method: "PUT",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ guardado: true, metodo_Pago: metodoPago })
+                    });
+                    if (!response.ok) throw new Error("Error al marcar como guardado");
+                    card.remove();
+                } catch (err) {
+                    console.error(err);
+                    alert("❌ No se pudo marcar el pedido como guardado.");
+                }
+            }
+
+            // Eliminar pedido
+            if (e.target.classList.contains("eliminar")) {
+                const confirmar = confirm("¿Estás seguro de que quieres eliminar este pedido?");
+                if (!confirmar) return;
+
+                try {
+                    await fetch(`${apiPedidos}/eliminar/${id}`, {
+                        method: "DELETE",
+                        headers: { "Content-Type": "application/json" }
+                    });
+                    alert("Pedido eliminado exitosamente");
+                    card.remove();
+                } catch (error) {
+                    console.error("Error al eliminar pedido:", error);
+                    alert("Ocurrió un error al eliminar el pedido.");
+                }
+            }
+        };
+
+    } catch (err) {
+        console.error(err);
+        lista.innerHTML = "<p>❌ Error al cargar los pedidos.</p>";
     }
 }
 
+
+
     async function cargarDatos() {
         try {
-            let [menuRes, inventarioRes, pedidosPendientesRes, pedidosListosRes, mesasRes] = await Promise.all([
+            let [menuRes, inventarioRes, pedidosPendientesRes, mesasRes] = await Promise.all([
                 fetch(apiURL),
                 fetch(`${apiInventario}/bebidas`),
                 fetch(`${apiPedidos}/estado/pendiente`),
-                fetch(`${apiPedidos}/estado/listo`),
                 fetch(apiMesas)
             ]);
 
-            let [menu, inventario, pedidosPendientes,pedidosListosData, mesas] = await Promise.all([
+            let [menu, inventario, pedidosPendientes, mesas] = await Promise.all([
                 menuRes.json(),
                 inventarioRes.json(),
                 pedidosPendientesRes.json(),
-                pedidosListosRes.json(),
                 mesasRes.json()
             ]);
 
-           //  pedidosGlobal = pedidosListos;
+
             bebidasGlobal = inventario;
-           pedidosListos = pedidosListosData;
+
             mostrarMenu(menu);
             mostrarInventario(inventario);
-           // mostrarVentas(pedidosListos);
-          //  mostrarPedidosPorConfirmar(pedidosListosData);
             mostrarMesas(mesas);
-
            mostrarVentas(pedidosListos);
 
         } catch (error) {
@@ -241,23 +367,25 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 }
 
-
 function mostrarPedidosPorConfirmar(pedidos) {
     const lista = document.getElementById("listaPedidosPorConfirmar");
     const fechaSeleccionada = document.getElementById("fechaConfirmar").value;
-    lista.innerHTML = "";
 
-    if (!fechaSeleccionada) return;
+    // Mostrar mensaje de cargando
+    lista.innerHTML = "<p>Cargando pedidos...</p>";
+
+    if (!fechaSeleccionada || !Array.isArray(pedidos)) {
+        lista.innerHTML = "<p>No hay pedidos para esta fecha.</p>";
+        return;
+    }
 
     const [year, month, day] = fechaSeleccionada.split("-");
-    const fechaInput = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+    const fechaInput = new Date(year, month - 1, day);
 
+    // Filtrar pedidos válidos
     const pedidosFiltrados = pedidos.filter(pedido => {
-        if (pedido.estado !== "listo") return false;
-        if (pedido.guardado === true) return false;
-
+        if (pedido.estado !== "listo" || pedido.guardado) return false;
         const fechaPedido = new Date(pedido.fecha._seconds * 1000);
-
         return (
             fechaPedido.getFullYear() === fechaInput.getFullYear() &&
             fechaPedido.getMonth() === fechaInput.getMonth() &&
@@ -265,99 +393,91 @@ function mostrarPedidosPorConfirmar(pedidos) {
         );
     });
 
+    if (pedidosFiltrados.length === 0) {
+        lista.innerHTML = "<p>No hay pedidos para esta fecha.</p>";
+        return;
+    }
+
+    // Construir todo el HTML como string
+    let html = "";
     pedidosFiltrados.forEach(pedido => {
-        const card = document.createElement("div");
-        card.className = "pedido-card";
+        const productosAgrupados = pedido.productos.reduce((acc, prod) => {
+            if (!acc[prod.nombre]) acc[prod.nombre] = { cantidad: 0, precio: prod.precio };
+            acc[prod.nombre].cantidad += prod.cantidad;
+            return acc;
+        }, {});
 
-        // Agrupar productos por nombre
-        const productosAgrupados = {};
-
-        pedido.productos.forEach(prod => {
-            if (productosAgrupados[prod.nombre]) {
-                productosAgrupados[prod.nombre].cantidad += prod.cantidad;
-            } else {
-                productosAgrupados[prod.nombre] = {
-                    cantidad: prod.cantidad,
-                    precio: prod.precio
-                };
-            }
-        });
-
-        // Crear lista de productos con subtotal
-        let listaProductosHTML = "";
         let total = 0;
+        const listaProductosHTML = Object.entries(productosAgrupados)
+            .map(([nombre, { cantidad, precio }]) => {
+                const subtotal = cantidad * precio;
+                total += subtotal;
+                return `<li>${nombre} x${cantidad} - $${precio.toFixed(2)} c/u = $${subtotal.toFixed(2)}</li>`;
+            })
+            .join("");
 
-        for (const nombre in productosAgrupados) {
-            const { cantidad, precio } = productosAgrupados[nombre];
-            const subtotal = cantidad * precio;
-            total += subtotal;
-
-            listaProductosHTML += `<li>${nombre} x${cantidad} - $${precio.toFixed(2)} c/u = $${subtotal.toFixed(2)}</li>`;
-        }
-
-        card.innerHTML = `
+        html += `
+        <div class="pedido-card" data-id="${pedido.id}">
             <h5>Mesa: ${pedido.mesaId || "Desconocida"}</h5>
             <p><strong>Mesera:</strong> ${pedido.mesera}</p>
             <p><strong>Cliente:</strong> ${pedido.cliente}</p>
-            <ul>
-                ${listaProductosHTML}
-            </ul>
+            <ul>${listaProductosHTML}</ul>
             <p><strong>Total:</strong> $${total.toFixed(2)}</p>
 
-           <label for="metodoPago-${pedido.id}"><strong>Método de Pago:</strong></label>
-<select id="metodoPago-${pedido.id}" class="form-select form-select-sm mb-2">
-    <option value="" disabled selected>Selecciona método de pago</option>
-    <option value="Efectivo">Efectivo</option>
-    <option value="Tarjeta">Tarjeta</option>
-    <option value="Pendiente">Pendiente</option>
-</select>
+            <label><strong>Método de Pago:</strong></label>
+            <select class="form-select form-select-sm mb-2 metodo-pago">
+                <option value="" disabled selected>Selecciona método de pago</option>
+                <option value="Efectivo">Efectivo</option>
+                <option value="Tarjeta">Tarjeta</option>
+                <option value="Pendiente">Pendiente</option>
+            </select>
 
             <button class="btn btn-primary btn-sm imprimir-ticket">🧾 Imprimir ticket</button>
             <button class="btn btn-success btn-sm ms-2 marcar-guardado">Guardar</button>
             <hr>
-        `;
+        </div>`;
+    });
 
-        card.querySelector(".imprimir-ticket").addEventListener("click", () => {
+    // Renderizar todo de una vez
+    lista.innerHTML = html;
+
+    // Delegación de eventos para imprimir ticket
+    lista.addEventListener("click", async (e) => {
+        const card = e.target.closest(".pedido-card");
+        if (!card) return;
+        const id = card.dataset.id;
+        const pedido = pedidosFiltrados.find(p => p.id === id);
+
+        if (e.target.classList.contains("imprimir-ticket")) {
             imprimirTicket(pedido);
-        });
+        }
 
-        card.querySelector(".marcar-guardado").addEventListener("click", async () => {
-            const selectMetodoPago = document.getElementById(`metodoPago-${pedido.id}`);
-            const metodoPago = selectMetodoPago.value.trim();
-
+        if (e.target.classList.contains("marcar-guardado")) {
+            const select = card.querySelector(".metodo-pago");
+            const metodoPago = select.value.trim();
             if (!metodoPago) {
-                alert("Por favor, escribe el método de pago antes de guardar.");
-                selectMetodoPago.focus();
+                alert("Por favor, selecciona el método de pago antes de guardar.");
+                select.focus();
                 return;
             }
 
             try {
-                const response = await fetch(`${apiPedidos}/${pedido.id}/guardar`, {
+                const response = await fetch(`${apiPedidos}/${id}/guardar`, {
                     method: "PUT",
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify({
-                        guardado: true,
-                        metodo_Pago: metodoPago
-                    })
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ guardado: true, metodo_Pago: metodoPago })
                 });
 
                 if (!response.ok) throw new Error("Error al marcar como guardado");
 
-                alert("✅ Pedido marcado como guardado exitosamente.");
                 card.remove();
-            } catch (error) {
+            } catch (err) {
+                console.error(err);
                 alert("❌ No se pudo marcar el pedido como guardado.");
-                console.error(error);
             }
-        });
-
-        lista.appendChild(card);
+        }
     });
 }
-
-
 
 
 function imprimirTicket(pedido) {
@@ -704,9 +824,7 @@ function imprimirResumenVentas(pedidos) {
         </html>
     `);
 }
-
-    
-  function mostrarVentas(pedidos) {
+async function mostrarVentas() {
     const fechaSeleccionada = document.getElementById("fechaVentas").value;
     const listaVentas = document.getElementById("listaVentas");
     const totalVentas = document.getElementById("totalVentas");
@@ -716,113 +834,101 @@ function imprimirResumenVentas(pedidos) {
 
     if (!fechaSeleccionada) return;
 
-    const [year, month, day] = fechaSeleccionada.split("-");
-    const fechaInput = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+    try {
+        // Llamar a tu nuevo endpoint
+        const res = await fetch(`${apiPedidos}/guardados/${fechaSeleccionada}`);
+        if (!res.ok) throw new Error("Error al obtener pedidos guardados");
+        const pedidosFiltrados = await res.json();
 
-    const pedidosFiltrados = pedidos.filter(pedido => {
-        if (pedido.guardado !== true) return false;
-        const fechaPedido = new Date(pedido.fecha._seconds * 1000);
-        return (
-            fechaPedido.getFullYear() === fechaInput.getFullYear() &&
-            fechaPedido.getMonth() === fechaInput.getMonth() &&
-            fechaPedido.getDate() === fechaInput.getDate()
-        );
-    });
+        // Ordenar por folio
+        pedidosFiltrados.sort((a, b) => a.folio - b.folio);
 
-    //pedidosFiltrados.sort((a, b) => a.fecha._seconds - b.fecha._seconds);
-    pedidosFiltrados.sort((a, b) => a.folio - b.folio);
+        let total = 0;
+        let totalEfectivo = 0;
+        let totalTarjeta = 0;
+        let totalPendientes = 0;
 
+        pedidosFiltrados.forEach((pedido, index) => {
+            const numeroPedido = index + 1;
+            const fechaPedido = new Date(pedido.fecha._seconds * 1000);
+            const fechaFormateada = fechaPedido.toLocaleString();
 
-    let total = 0;
-    let totalEfectivo = 0;
-    let totalTarjeta = 0;
-    let totalPendientes = 0;
+            total += pedido.total;
 
-    pedidosFiltrados.forEach((pedido, index) => {
-        const numeroPedido = index + 1;
-        const fechaPedido = new Date(pedido.fecha._seconds * 1000);
-        const fechaFormateada = fechaPedido.toLocaleString();
+            if (pedido.metodo_Pago === "Efectivo") totalEfectivo += pedido.total;
+            else if (pedido.metodo_Pago === "Tarjeta") totalTarjeta += pedido.total;
+            else totalPendientes += pedido.total;
 
-        total += pedido.total;
+            const li = document.createElement("li");
+            li.classList.add("list-group-item");
 
-        if (pedido.metodo_Pago === "Efectivo") {
-            totalEfectivo += pedido.total;
-        } else if (pedido.metodo_Pago === "Tarjeta") {
-            totalTarjeta += pedido.total;
-        } else {
-            totalPendientes += pedido.total;
-        }
+            // Crear select para método de pago
+            const selectMetodo = document.createElement("select");
+            selectMetodo.className = "form-select form-select-sm mt-1";
+            selectMetodo.innerHTML = `
+                <option value="Efectivo" ${pedido.metodo_Pago === "Efectivo" ? "selected" : ""}>Efectivo</option>
+                <option value="Tarjeta" ${pedido.metodo_Pago === "Tarjeta" ? "selected" : ""}>Tarjeta</option>
+                <option value="Pendiente" ${!pedido.metodo_Pago || pedido.metodo_Pago === "Pendiente" ? "selected" : ""}>Pendiente</option>
+            `;
 
-        const li = document.createElement("li");
-        li.classList.add("list-group-item");
+            selectMetodo.addEventListener("change", async () => {
+                const nuevoMetodo = selectMetodo.value;
+                try {
+                    const pedidoRef = doc(db, "pedidos", pedido.id);
+                    await updateDoc(pedidoRef, { metodo_Pago: nuevoMetodo });
+                    pedido.metodo_Pago = nuevoMetodo;
+                    alert("Método de pago actualizado ✅");
+                    mostrarVentas(); // Recarga la lista actualizada
+                } catch (error) {
+                    console.error("Error al actualizar el método de pago:", error);
+                    alert("❌ No se pudo actualizar el método de pago.");
+                }
+            });
 
-        // Crear select dinámico
-        const selectMetodo = document.createElement("select");
-        selectMetodo.className = "form-select form-select-sm mt-1";
-        selectMetodo.innerHTML = `
-            <option value="Efectivo" ${pedido.metodo_Pago === "Efectivo" ? "selected" : ""}>Efectivo</option>
-            <option value="Tarjeta" ${pedido.metodo_Pago === "Tarjeta" ? "selected" : ""}>Tarjeta</option>
-            <option value="Pendiente" ${!pedido.metodo_Pago || pedido.metodo_Pago === "Pendiente" ? "selected" : ""}>Pendiente</option>
-        `;
+            li.innerHTML = `
+                <strong style="font-size: 20px;">Pedido #${numeroPedido}</strong><br>
+                <strong>Folio:</strong> ${pedido.folio}<br>
+                <strong>Mesera:</strong> ${pedido.mesera}<br>
+                <strong>Cliente:</strong> ${pedido.cliente}<br>
+                <strong>Total:</strong> $${pedido.total.toFixed(2)}<br>
+                <strong>Fecha:</strong> ${fechaFormateada}<br>
+                <strong>Método de Pago:</strong>
+            `;
 
-        // Listener para actualizar Firebase al cambiar el método
-        selectMetodo.addEventListener("change", async () => {
-            const nuevoMetodo = selectMetodo.value;
-            try {
-                const pedidoRef = doc(db, "pedidos", pedido.id); // Asegúrate que cada pedido tenga .id
-                await updateDoc(pedidoRef, { metodo_Pago: nuevoMetodo });
-                pedido.metodo_Pago = nuevoMetodo;
-                alert("Método de pago actualizado ✅");
-                mostrarVentas(pedidos); // refresca totales
-            } catch (error) {
-                console.error("Error al actualizar el método de pago:", error);
-                alert("❌ No se pudo actualizar el método de pago.");
-            }
+            li.appendChild(selectMetodo);
+
+            const btnImprimir = document.createElement("button");
+            btnImprimir.textContent = "Imprimir ticket";
+            btnImprimir.className = "btn btn-primary btn-sm ms-2";
+            btnImprimir.addEventListener("click", () => imprimirTicket(pedido));
+
+            li.appendChild(btnImprimir);
+            listaVentas.appendChild(li);
         });
 
-        li.innerHTML = `
-            <strong style="font-size: 20px;">Pedido #${numeroPedido}</strong><br>
-            <strong>Folio:</strong> ${pedido.folio}<br>
-            <strong>Mesera:</strong> ${pedido.mesera}<br>
-            <strong>Cliente:</strong> ${pedido.cliente}<br>
-            <strong>Total:</strong> $${pedido.total.toFixed(2)}<br>
-            <strong>Fecha:</strong> ${fechaFormateada}<br>
-            <strong>Método de Pago:</strong>
+        totalVentas.textContent = total.toFixed(2);
+
+        const resumenTotales = document.createElement("div");
+        resumenTotales.className = "mt-3";
+        resumenTotales.innerHTML = `
+            <strong>Total Efectivo:</strong> $${totalEfectivo.toFixed(2)}<br>
+            <strong>Total Tarjeta:</strong> $${totalTarjeta.toFixed(2)}<br>
+            <strong>Total Pendientes:</strong> $${totalPendientes.toFixed(2)}
         `;
 
-        li.appendChild(selectMetodo);
+        listaVentas.appendChild(resumenTotales);
 
-        const btnImprimir = document.createElement("button");
-        btnImprimir.textContent = "Imprimir ticket";
-        btnImprimir.className = "btn btn-primary btn-sm ms-2";
-        btnImprimir.addEventListener("click", () => {
-            imprimirTicket(pedido);
-        });
+        const btnImprimirResumen = document.createElement("button");
+        btnImprimirResumen.textContent = "🖨️ Imprimir resumen";
+        btnImprimirResumen.className = "btn btn-success mt-3";
+        btnImprimirResumen.addEventListener("click", () => imprimirResumenVentas(pedidosFiltrados));
 
-        li.appendChild(btnImprimir);
-        listaVentas.appendChild(li);
-    });
+        listaVentas.appendChild(btnImprimirResumen);
 
-    totalVentas.textContent = total.toFixed(2);
-
-    const resumenTotales = document.createElement("div");
-    resumenTotales.className = "mt-3";
-    resumenTotales.innerHTML = `
-        <strong>Total Efectivo:</strong> $${totalEfectivo.toFixed(2)}<br>
-        <strong>Total Tarjeta:</strong> $${totalTarjeta.toFixed(2)}<br>
-        <strong>Total Pendientes:</strong> $${totalPendientes.toFixed(2)}
-    `;
-
-    listaVentas.appendChild(resumenTotales);
-
-    const btnImprimirResumen = document.createElement("button");
-    btnImprimirResumen.textContent = "🖨️ Imprimir resumen";
-    btnImprimirResumen.className = "btn btn-success mt-3";
-    btnImprimirResumen.addEventListener("click", () => {
-        imprimirResumenVentas(pedidos);
-    });
-
-    listaVentas.appendChild(btnImprimirResumen);
+    } catch (error) {
+        console.error("Error al mostrar ventas:", error);
+        alert("❌ No se pudieron cargar las ventas.");
+    }
 }
 
 

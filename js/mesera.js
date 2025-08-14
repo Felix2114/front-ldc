@@ -172,27 +172,31 @@ async function cargarOrdenes() {
                 .map(([nombre, datos]) => `<li>${nombre} x${datos.cantidad} - $${datos.subtotal.toFixed(2)}</li>`)
                 .join("");
 
-            div.innerHTML = `
-                <div style="text-align: right;">
-                    <span class="badge ${pedido.entregado ? 'bg-success' : 'bg-warning'}">
-                        Entrega ${pedido.entregado ? 'lista' : 'pendiente'}
-                    </span>
-                </div>
+           div.innerHTML = `
+    <div style="text-align: right;">
+        <span class="badge ${pedido.entregado ? 'bg-success' : 'bg-warning'}">
+            Entrega ${pedido.entregado ? 'lista' : 'pendiente'}
+        </span>
+    </div>
 
-                <h5>🪑 Mesa ${pedido.mesaId} - Mesera: ${pedido.mesera}</h5>
-                <p><strong>Nota:</strong> ${pedido.nota}</p>
-                <p><strong>Cliente:</strong> ${pedido.cliente}</p>
-                <ul>
-                    ${listaProductosHTML}
-                </ul>
-                <strong>Total:</strong> $${pedido.total.toFixed(2)}
-                <div class="mt-2">
-                    <button class="btn btn-warning btn-sm me-1" id="editarPedido${pedido.id}">✏️ Editar</button>
-                    <button class="btn btn-success btn-sm me-1" id="ordenEntregada${pedido.id}">✅ Orden Entregada</button>
-                    <button class="btn btn-danger btn-sm" id="finalizarAtencion${pedido.id}">🛑 Finalizar Atención</button>
-                     <button class="btn btn-danger btn-sm" id="eliminarPedido${pedido.id}">🗑️ Eliminar</button>
-                </div>
-            `;
+    <h5>🪑 Mesa ${pedido.mesaId} - Mesera: ${pedido.mesera}</h5>
+    <p><strong>Nota:</strong> ${pedido.nota}</p>
+    <p><strong>Cliente:</strong> ${pedido.cliente}</p>
+    <ul>
+        ${listaProductosHTML}
+    </ul>
+    <strong>Total:</strong> $${pedido.total.toFixed(2)}
+    
+    <div class="mt-2 d-flex">
+        <div>
+            <button class="btn btn-warning btn-sm me-1" id="editarPedido${pedido.id}">✏️ Editar</button>
+            <button class="btn btn-success btn-sm me-1" id="ordenEntregada${pedido.id}">✅ Orden Entregada</button>
+            <button class="btn btn-danger btn-sm me-1" id="finalizarAtencion${pedido.id}">🛑 Finalizar Atención</button>
+        </div>
+        <button class="btn btn-danger btn-sm ms-auto" id="eliminarPedido${pedido.id}">🗑️ Eliminar</button>
+    </div>
+`;
+
 
             listaPendientes.appendChild(div);
 
