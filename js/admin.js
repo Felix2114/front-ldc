@@ -187,10 +187,14 @@ lista.onclick = async (e) => {
                     guardado: true,
                     metodo_Pago: metodoPago,
                     descuento: descuento || null
+                    
                 })
             });
 
             if (!response.ok) throw new Error("Error al marcar como guardado");
+
+             alert("✅ Guardado exitosamente");
+             
             card.remove();
         } catch (err) {
             console.error(err);
@@ -484,7 +488,7 @@ function imprimirTicket(pedido) {
                     table { width: 100%; border-collapse: collapse; margin: 10px 0; }
                     th, td { border-bottom: 1px dashed #000; padding: 4px; text-align: center; }
                     .total { font-weight: bold; margin-top: 10px; text-align: right; }
-                    .descuento { text-align: right; font-weight: bold; color: #d9534f; }
+                    .descuento { text-align: right; font-weight: bold; color: #0a0a0aff; }
                     .no-facturable { margin-top: 20px; padding: 8px; border: 2px dashed red; color: red; font-weight: bold; font-size: 14px; }
                     .saludo, .oferta { margin-top: 15px; font-size: 12px; }
                     .social { margin-top: 10px; font-size: 12px; }
@@ -495,7 +499,7 @@ function imprimirTicket(pedido) {
                 
                 <div style="margin-top: 10px; margin-bottom: 10px;">
                     <h1 style="margin: 0; font-size: 20px; letter-spacing: 1px; font-weight: bold;">LOS DOS CARNALES</h1>
-                    <p style="margin: 0; font-size: 12px; font-style: italic; color: #555;">Restaurante Familiar</p>
+                    <p style="margin: 0; font-size: 12px; font-style: italic; color: #0a0a0aff;">Restaurante Familiar</p>
                 </div>
 
                 <div class="info">
