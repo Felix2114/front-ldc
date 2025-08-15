@@ -84,120 +84,172 @@ fechaInput.value = hoy.toISOString().split('T')[0]; // Solo toma la parte de la 
                 return acc;
             }, {});
 
-            let total = 0;
-            const listaProductosHTML = Object.entries(productosAgrupados)
-                .map(([nombre, { cantidad, precio }]) => {
-                    const subtotal = cantidad * precio;
-                    total += subtotal;
-                    return `<li>${nombre} x${cantidad} - $${precio.toFixed(2)} c/u = $${subtotal.toFixed(2)}</li>`;
-                })
-                .join("");
+            let total = pedido.total || 0; // si ya hay total guardado (con descuento), lo usamos
+let totalOriginal = 0;
+const listaProductosHTML = Object.entries(productosAgrupados)
+    .map(([nombre, { cantidad, precio }]) => {
+        const subtotal = cantidad * precio;
+        totalOriginal += subtotal;
+        return `<li>${nombre} x${cantidad} - $${precio.toFixed(2)} c/u = $${subtotal.toFixed(2)}</li>`;
+    })
+    .join("");
+
+    if (!total) total = totalOriginal;
 
             const card = document.createElement("div");
             card.className = "pedido-card p-2 mb-2 border rounded";
             card.dataset.id = pedido.id;
 
-            card.innerHTML = `
-                <h5>Mesa: ${pedido.mesaId || "Desconocida"}</h5>
-                <p><strong>Mesera:</strong> ${pedido.mesera}</p>
-                <p><strong>Cliente:</strong> ${pedido.cliente}</p>
-                <ul>${listaProductosHTML}</ul>
-                <p><strong>Total:</strong> $${total.toFixed(2)}</p>
+           card.innerHTML = `
+    <h5>Mesa: ${pedido.mesaId || "Desconocida"}</h5>
+    <p><strong>Mesera:</strong> ${pedido.mesera}</p>
+    <p><strong>Cliente:</strong> ${pedido.cliente}</p>
+    <ul>${listaProductosHTML}</ul>
 
-                <label><strong>Método de Pago:</strong></label>
-                <select class="form-select form-select-sm mb-2 metodo-pago">
-                    <option value="" disabled selected>Selecciona método de pago</option>
-                    <option value="Efectivo">Efectivo</option>
-                    <option value="Tarjeta">Tarjeta</option>
-                    <option value="Pendiente">Pendiente</option>
-                </select>
+    <p><strong>Total:</strong> $${totalOriginal.toFixed(2)}</p>
 
-                 <label><strong>Aplicar Descuento:</strong></label>
-                <select class="form-select form-select-sm mb-2 descuento">
-                    <option value="" disabled selected>Selecciona algun descuento</option>
-                    <option value="Descuento DosCarnales">Descuento DosCarnales</option>
-                    
-                </select>
+    ${
+        pedido.descuento
+            ? `<p><strong>Descuento:</strong> ${pedido.descuento} -$${pedido.montoDescuento.toFixed(2)}</p>
+               <p><strong>Total con Descuento:</strong> $${total.toFixed(2)}</p>`
+            : ""
+    }
 
-                <div class="d-flex gap-2">
-                    <button class="btn btn-primary btn-sm imprimir-ticket">🧾 Imprimir ticket</button>
-                    <button class="btn btn-success btn-sm marcar-guardado">Guardar</button>
-                    <button class="btn btn-danger btn-sm ms-auto eliminar">🗑️ Eliminar</button>
-                </div>
-                <hr>
-            `;
+    <label><strong>Método de Pago:</strong></label>
+    <select class="form-select form-select-sm mb-2 metodo-pago">
+        <option value="" disabled selected>Selecciona método de pago</option>
+        <option value="Efectivo">Efectivo</option>
+        <option value="Tarjeta">Tarjeta</option>
+        <option value="Pendiente">Pendiente</option>
+    </select>
 
+    <label><strong>Aplicar Descuento:</strong></label>
+    <select class="form-select form-select-sm mb-2 descuento">
+        <option value="" disabled selected>Selecciona algun descuento</option>
+        <option value="Descuento Compas">Descuento Compas</option>
+        <option value="Descuento Especial">Descuento Especial</option>
+        <option value="Descuento Medio">Descuento Medio</option>
+        <option value="Descuento Antojitos">Descuento Antojitos</option>
+        <option value="Descuento Boing">Descuento Boing</option>
+        <option value="Descuento Coca-Cola">Descuento Coca-Cola</option>
+    </select>
+
+    <div class="d-flex gap-2">
+        <button class="btn btn-primary btn-sm imprimir-ticket">🧾 Imprimir ticket</button>
+        <button class="btn btn-success btn-sm marcar-guardado">Guardar</button>
+        <button class="btn btn-warning btn-sm marcar-descuento">Aplicar Descuento</button>
+        <button class="btn btn-danger btn-sm ms-auto eliminar">🗑️ Eliminar</button>
+    </div>
+    <hr>
+`;
             fragment.appendChild(card);
         });
 
         lista.innerHTML = "";
         lista.appendChild(fragment);
 
+
+
+        
+
         // Delegación de eventos para todos los botones dentro del contenedor
-        lista.onclick = async (e) => {
-            const card = e.target.closest(".pedido-card");
-            if (!card) return;
-            const id = card.dataset.id;
-            const pedido = pedidos.find(p => p.id === id);
+       // Dentro de lista.onclick
+lista.onclick = async (e) => {
+    const card = e.target.closest(".pedido-card");
+    if (!card) return;
+    const id = card.dataset.id;
+    const pedido = pedidos.find(p => p.id === id);
 
-            // Imprimir ticket
-            if (e.target.classList.contains("imprimir-ticket")) {
-                imprimirTicket(pedido);
-            }
-
-            // Guardar método de pago
-            // Guardar método de pago y descuento
-if (e.target.classList.contains("marcar-guardado")) {
-    const selectMetodo = card.querySelector(".metodo-pago");
-    const selectDescuento = card.querySelector(".descuento");
-
-    const metodoPago = selectMetodo.value.trim();
-    const descuento = selectDescuento.value.trim();
-
-    if (!metodoPago) {
-        alert("Por favor, selecciona el método de pago antes de guardar.");
-        selectMetodo.focus();
-        return;
+    // Imprimir ticket
+    if (e.target.classList.contains("imprimir-ticket")) {
+        imprimirTicket(pedido);
     }
 
-    try {
-        const response = await fetch(`${apiPedidos}/${id}/guardar`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                guardado: true,
-                metodo_Pago: metodoPago,
-                descuento: descuento || null // null si no selecciona nada
-            })
-        });
+    // Guardar método de pago y descuento
+    if (e.target.classList.contains("marcar-guardado")) {
+        const selectMetodo = card.querySelector(".metodo-pago");
+        const selectDescuento = card.querySelector(".descuento");
 
-        if (!response.ok) throw new Error("Error al marcar como guardado");
-        card.remove();
-    } catch (err) {
-        console.error(err);
-        alert("❌ No se pudo marcar el pedido como guardado.");
+        const metodoPago = selectMetodo.value.trim();
+        const descuento = selectDescuento.value.trim();
+
+        if (!metodoPago) {
+            alert("Por favor, selecciona el método de pago antes de guardar.");
+            selectMetodo.focus();
+            return;
+        }
+
+        try {
+            const response = await fetch(`${apiPedidos}/${id}/guardar`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    guardado: true,
+                    metodo_Pago: metodoPago,
+                    descuento: descuento || null
+                })
+            });
+
+            if (!response.ok) throw new Error("Error al marcar como guardado");
+            card.remove();
+        } catch (err) {
+            console.error(err);
+            alert("❌ No se pudo marcar el pedido como guardado.");
+        }
     }
-}
 
+    // 📌 Aplicar descuento
+    if (e.target.classList.contains("marcar-descuento")) {
+        const selectDescuento = card.querySelector(".descuento");
+        const descuento = selectDescuento.value.trim();
 
-            // Eliminar pedido
-            if (e.target.classList.contains("eliminar")) {
-                const confirmar = confirm("¿Estás seguro de que quieres eliminar este pedido?");
-                if (!confirmar) return;
+        if (!descuento) {
+            alert("Por favor, selecciona un descuento antes de aplicar.");
+            return;
+        }
 
-                try {
-                    await fetch(`${apiPedidos}/eliminar/${id}`, {
-                        method: "DELETE",
-                        headers: { "Content-Type": "application/json" }
-                    });
-                    alert("Pedido eliminado exitosamente");
-                    card.remove();
-                } catch (error) {
-                    console.error("Error al eliminar pedido:", error);
-                    alert("Ocurrió un error al eliminar el pedido.");
-                }
+        try {
+            const res = await fetch(`${apiPedidos}/${id}/descuento`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ descuento })
+            });
+
+            if (!res.ok) throw new Error("Error al aplicar descuento");
+
+            const data = await res.json();
+
+            // ✅ Actualizar el total visualmente en la tarjeta
+            const totalElement = card.querySelector("p strong")?.parentElement;
+            if (totalElement) {
+                totalElement.innerHTML = `<strong>Total:</strong> $${data.totalFinal.toFixed(2)}`;
             }
-        };
+
+            alert(`✅ Descuento aplicado. Total final: $${data.totalFinal.toFixed(2)}`);
+        } catch (err) {
+            console.error(err);
+            alert("❌ No se pudo aplicar el descuento.");
+        }
+    }
+
+    // Eliminar pedido
+    if (e.target.classList.contains("eliminar")) {
+        const confirmar = confirm("¿Estás seguro de que quieres eliminar este pedido?");
+        if (!confirmar) return;
+
+        try {
+            await fetch(`${apiPedidos}/eliminar/${id}`, {
+                method: "DELETE",
+                headers: { "Content-Type": "application/json" }
+            });
+            alert("Pedido eliminado exitosamente");
+            card.remove();
+        } catch (error) {
+            console.error("Error al eliminar pedido:", error);
+            alert("Ocurrió un error al eliminar el pedido.");
+        }
+    }
+};
 
     } catch (err) {
         console.error(err);
@@ -378,119 +430,6 @@ if (e.target.classList.contains("marcar-guardado")) {
     }
 }
 
-function mostrarPedidosPorConfirmar(pedidos) {
-    const lista = document.getElementById("listaPedidosPorConfirmar");
-    const fechaSeleccionada = document.getElementById("fechaConfirmar").value;
-
-    // Mostrar mensaje de cargando
-    lista.innerHTML = "<p>Cargando pedidos...</p>";
-
-    if (!fechaSeleccionada || !Array.isArray(pedidos)) {
-        lista.innerHTML = "<p>No hay pedidos para esta fecha.</p>";
-        return;
-    }
-
-    const [year, month, day] = fechaSeleccionada.split("-");
-    const fechaInput = new Date(year, month - 1, day);
-
-    // Filtrar pedidos válidos
-    const pedidosFiltrados = pedidos.filter(pedido => {
-        if (pedido.estado !== "listo" || pedido.guardado) return false;
-        const fechaPedido = new Date(pedido.fecha._seconds * 1000);
-        return (
-            fechaPedido.getFullYear() === fechaInput.getFullYear() &&
-            fechaPedido.getMonth() === fechaInput.getMonth() &&
-            fechaPedido.getDate() === fechaInput.getDate()
-        );
-    });
-
-    if (pedidosFiltrados.length === 0) {
-        lista.innerHTML = "<p>No hay pedidos para esta fecha.</p>";
-        return;
-    }
-
-    // Construir todo el HTML como string
-    let html = "";
-    pedidosFiltrados.forEach(pedido => {
-        const productosAgrupados = pedido.productos.reduce((acc, prod) => {
-            if (!acc[prod.nombre]) acc[prod.nombre] = { cantidad: 0, precio: prod.precio };
-            acc[prod.nombre].cantidad += prod.cantidad;
-            return acc;
-        }, {});
-
-        let total = 0;
-        const listaProductosHTML = Object.entries(productosAgrupados)
-            .map(([nombre, { cantidad, precio }]) => {
-                const subtotal = cantidad * precio;
-                total += subtotal;
-                return `<li>${nombre} x${cantidad} - $${precio.toFixed(2)} c/u = $${subtotal.toFixed(2)}</li>`;
-            })
-            .join("");
-
-        html += `
-        <div class="pedido-card" data-id="${pedido.id}">
-            <h5>Mesa: ${pedido.mesaId || "Desconocida"}</h5>
-            <p><strong>Mesera:</strong> ${pedido.mesera}</p>
-            <p><strong>Cliente:</strong> ${pedido.cliente}</p>
-            <ul>${listaProductosHTML}</ul>
-            <p><strong>Total:</strong> $${total.toFixed(2)}</p>
-
-            <label><strong>Método de Pago:</strong></label>
-            <select class="form-select form-select-sm mb-2 metodo-pago">
-                <option value="" disabled selected>Selecciona método de pago</option>
-                <option value="Efectivo">Efectivo</option>
-                <option value="Tarjeta">Tarjeta</option>
-                <option value="Pendiente">Pendiente</option>
-            </select>
-
-            <button class="btn btn-primary btn-sm imprimir-ticket">🧾 Imprimir ticket</button>
-            <button class="btn btn-success btn-sm ms-2 marcar-guardado">Guardar</button>
-            <hr>
-        </div>`;
-    });
-
-    // Renderizar todo de una vez
-    lista.innerHTML = html;
-
-    // Delegación de eventos para imprimir ticket
-    lista.addEventListener("click", async (e) => {
-        const card = e.target.closest(".pedido-card");
-        if (!card) return;
-        const id = card.dataset.id;
-        const pedido = pedidosFiltrados.find(p => p.id === id);
-
-        if (e.target.classList.contains("imprimir-ticket")) {
-            imprimirTicket(pedido);
-        }
-
-        if (e.target.classList.contains("marcar-guardado")) {
-            const select = card.querySelector(".metodo-pago");
-            const metodoPago = select.value.trim();
-            if (!metodoPago) {
-                alert("Por favor, selecciona el método de pago antes de guardar.");
-                select.focus();
-                return;
-            }
-
-            try {
-                const response = await fetch(`${apiPedidos}/${id}/guardar`, {
-                    method: "PUT",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ guardado: true, metodo_Pago: metodoPago })
-                });
-
-                if (!response.ok) throw new Error("Error al marcar como guardado");
-
-                card.remove();
-            } catch (err) {
-                console.error(err);
-                alert("❌ No se pudo marcar el pedido como guardado.");
-            }
-        }
-    });
-}
-
-
 function imprimirTicket(pedido) {
     const fecha = new Date();
     const fechaStr = fecha.toLocaleDateString();
@@ -509,12 +448,12 @@ function imprimirTicket(pedido) {
     });
 
     let filasProductos = "";
-    let total = 0;
+    let totalOriginal = 0;
 
     for (const nombre in productosAgrupados) {
         const { precio, cantidad } = productosAgrupados[nombre];
         const subtotal = precio * cantidad;
-        total += subtotal;
+        totalOriginal += subtotal;
 
         filasProductos += `
             <tr>
@@ -526,6 +465,11 @@ function imprimirTicket(pedido) {
         `;
     }
 
+    // Total con descuento si existe
+    const descuentoNombre = pedido.descuento || null;
+    const montoDescuento = pedido.montoDescuento || 0; // monto que se resta
+    const totalConDescuento = pedido.total || totalOriginal;
+
     const ventana = window.open('', '', 'width=400,height=700');
 
     ventana.document.write(`
@@ -533,55 +477,17 @@ function imprimirTicket(pedido) {
             <head>
                 <title>Ticket</title>
                 <style>
-                    body {
-                        font-family: monospace;
-                        padding: 10px;
-                        margin: 0;
-                        text-align: center;
-                    }
-                    img.logo {
-                        width: 100px;
-                        margin-bottom: 10px;
-                        margin: 0 auto 10px auto;
-                    }
-                    h2 {
-                        margin: 0;
-                    }
-                    .info {
-                        text-align: left;
-                        margin: 10px 0;
-                    }
-                    table {
-                        width: 100%;
-                        border-collapse: collapse;
-                        margin: 10px 0;
-                    }
-                    th, td {
-                        border-bottom: 1px dashed #000;
-                        padding: 4px;
-                        text-align: center;
-                    }
-                    .total {
-                        font-weight: bold;
-                        margin-top: 10px;
-                        text-align: right;
-                    }
-                    .no-facturable {
-                        margin-top: 20px;
-                        padding: 8px;
-                        border: 2px dashed red;
-                        color: red;
-                        font-weight: bold;
-                        font-size: 14px;
-                    }
-                    .saludo, .oferta {
-                        margin-top: 15px;
-                        font-size: 12px;
-                    }
-                    .social {
-                        margin-top: 10px;
-                        font-size: 12px;
-                    }
+                    body { font-family: monospace; padding: 10px; margin: 0; text-align: center; }
+                    img.logo { width: 100px; margin-bottom: 10px; }
+                    h2 { margin: 0; }
+                    .info { text-align: left; margin: 10px 0; }
+                    table { width: 100%; border-collapse: collapse; margin: 10px 0; }
+                    th, td { border-bottom: 1px dashed #000; padding: 4px; text-align: center; }
+                    .total { font-weight: bold; margin-top: 10px; text-align: right; }
+                    .descuento { text-align: right; font-weight: bold; color: #d9534f; }
+                    .no-facturable { margin-top: 20px; padding: 8px; border: 2px dashed red; color: red; font-weight: bold; font-size: 14px; }
+                    .saludo, .oferta { margin-top: 15px; font-size: 12px; }
+                    .social { margin-top: 10px; font-size: 12px; }
                 </style>
             </head>
             <body>
@@ -616,25 +522,23 @@ function imprimirTicket(pedido) {
                     </tbody>
                 </table>
 
-                <div class="total">TOTAL: $${total.toFixed(2)}</div>
+                <div class="total">TOTAL: $${totalOriginal.toFixed(2)}</div>
 
-                <div class="no-facturable">
-                    ESTE TICKET NO ES FACTURABLE
-                </div>
+                ${
+                    descuentoNombre
+                        ? `<div class="descuento">Descuento: ${descuentoNombre} -$${montoDescuento.toFixed(2)}</div>
+                           <div class="total">TOTAL CON DESCUENTO: $${totalConDescuento.toFixed(2)}</div>`
+                        : ""
+                }
 
+                <div class="no-facturable">ESTE TICKET NO ES FACTURABLE</div>
                 <div class="saludo">¡Muchas gracias por su visita!</div>
-                <div class="oferta">
-                    Camino al barreal s/n, Colonia Santa Teresa<br>
-                </div>
-
+                <div class="oferta">Camino al barreal s/n, Colonia Santa Teresa<br></div>
                 <div class="social">
                     <img src="https://upload.wikimedia.org/wikipedia/commons/5/51/Facebook_f_logo_%282019%29.svg" width="16" height="16" style="vertical-align:middle; margin-right:5px;">
                     Facebook Los Dos Carnales<br>
                 </div>
-
-                <div class="saludo">
-                    #somosLosDosCarnales👬
-                </div>
+                <div class="saludo">#somosLosDosCarnales👬</div>
 
                 <script>
                     window.onload = function() {
@@ -835,6 +739,8 @@ function imprimirResumenVentas(pedidos) {
         </html>
     `);
 }
+
+
 async function mostrarVentas() {
     const fechaSeleccionada = document.getElementById("fechaVentas").value;
     const listaVentas = document.getElementById("listaVentas");
