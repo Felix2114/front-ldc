@@ -50,7 +50,7 @@ fechaInput.value = hoy.toISOString().split('T')[0]; // Solo toma la parte de la 
 
     // ⏳ Cargar el resto de datos en segundo plano
     cargarDatos();
-    setInterval(cargarDatos, 400000);
+   // setInterval(cargarDatos, 400000);// cambiar solo para que se actualice cuando se ocupe 
 
     async function cargarPedidosListosYMostrarConfirmar() {
     const lista = document.getElementById("listaPedidosPorConfirmar");
@@ -1064,7 +1064,7 @@ async function mostrarVentas() {
 
     // Iniciar carga de datos al abrir la página
     cargarDatos();
-     setInterval(cargarDatos, 15000);
+     //setInterval(cargarDatos, 15000);
 
 
      document.addEventListener("focusin", (e) => {
