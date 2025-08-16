@@ -50,7 +50,7 @@ fechaInput.value = hoy.toISOString().split('T')[0]; // Solo toma la parte de la 
 
     // ⏳ Cargar el resto de datos en segundo plano
     cargarDatos();
-    setInterval(cargarDatos, 40000);
+    setInterval(cargarDatos, 400000);
 
     async function cargarPedidosListosYMostrarConfirmar() {
     const lista = document.getElementById("listaPedidosPorConfirmar");
