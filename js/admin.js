@@ -39,11 +39,14 @@ document.addEventListener("DOMContentLoaded", async () => {
         mostrarVentas(pedidosListos);
     });
 
-   const fechaInput = document.getElementById("fechaConfirmar");
+  const fechaInput = document.getElementById("fechaConfirmar");
 
-// Obtener la fecha actual y formatearla a YYYY-MM-DD
+// ✅ Obtener la fecha actual en LOCAL y formatearla a YYYY-MM-DD
 const hoy = new Date();
-fechaInput.value = hoy.toISOString().split('T')[0]; // Solo toma la parte de la fecha
+const year = hoy.getFullYear();
+const month = String(hoy.getMonth() + 1).padStart(2, '0');
+const day = String(hoy.getDate()).padStart(2, '0');
+fechaInput.value = `${year}-${month}-${day}`; // 📌 Siempre muestra la fecha local
 
     cargarPedidosListosYMostrarConfirmar();
     setInterval(cargarPedidosListosYMostrarConfirmar, 20000);
@@ -52,7 +55,7 @@ fechaInput.value = hoy.toISOString().split('T')[0]; // Solo toma la parte de la 
     cargarDatos();
    // setInterval(cargarDatos, 400000);// cambiar solo para que se actualice cuando se ocupe 
 
-    async function cargarPedidosListosYMostrarConfirmar() {
+async function cargarPedidosListosYMostrarConfirmar() {
     const lista = document.getElementById("listaPedidosPorConfirmar");
     const fechaSeleccionada = document.getElementById("fechaConfirmar").value;
 
@@ -61,7 +64,6 @@ fechaInput.value = hoy.toISOString().split('T')[0]; // Solo toma la parte de la 
         return;
     }
 
-    // Mostrar cargando
     lista.innerHTML = "<p>Cargando pedidos...</p>";
 
     try {
@@ -70,6 +72,7 @@ fechaInput.value = hoy.toISOString().split('T')[0]; // Solo toma la parte de la 
 
         const pedidos = await res.json();
         pedidosListos = pedidos;
+
         if (!pedidos.length) {
             lista.innerHTML = "<p>No hay pedidos para esta fecha.</p>";
             return;
@@ -84,64 +87,60 @@ fechaInput.value = hoy.toISOString().split('T')[0]; // Solo toma la parte de la 
                 return acc;
             }, {});
 
-            let total = pedido.total || 0; // si ya hay total guardado (con descuento), lo usamos
-let totalOriginal = 0;
-const listaProductosHTML = Object.entries(productosAgrupados)
-    .map(([nombre, { cantidad, precio }]) => {
-        const subtotal = cantidad * precio;
-        totalOriginal += subtotal;
-        return `<li>${nombre} x${cantidad} - $${precio.toFixed(2)} c/u = $${subtotal.toFixed(2)}</li>`;
-    })
-    .join("");
+            let total = pedido.total || 0;
+            let totalOriginal = 0;
 
-    if (!total) total = totalOriginal;
+            const listaProductosHTML = Object.entries(productosAgrupados)
+                .map(([nombre, { cantidad, precio }]) => {
+                    const subtotal = cantidad * precio;
+                    totalOriginal += subtotal;
+                    return `<li>${nombre} x${cantidad} - $${precio.toFixed(2)} c/u = $${subtotal.toFixed(2)}</li>`;
+                })
+                .join("");
+
+            if (!total) total = totalOriginal;
 
             const card = document.createElement("div");
             card.className = "pedido-card p-2 mb-2 border rounded";
             card.dataset.id = pedido.id;
 
-           card.innerHTML = `
-    <h5>Mesa: ${pedido.mesaId || "Desconocida"}</h5>
-    <p><strong>Mesera:</strong> ${pedido.mesera}</p>
-    <p><strong>Cliente:</strong> ${pedido.cliente}</p>
-    <ul>${listaProductosHTML}</ul>
-
-    <p><strong>Total:</strong> $${totalOriginal.toFixed(2)}</p>
-
-    ${
-        pedido.descuento
-            ? `<p><strong>Descuento:</strong> ${pedido.descuento} -$${pedido.montoDescuento.toFixed(2)}</p>
-               <p><strong>Total con Descuento:</strong> $${total.toFixed(2)}</p>`
-            : ""
-    }
-
-    <label><strong>Método de Pago:</strong></label>
-    <select class="form-select form-select-sm mb-2 metodo-pago">
-        <option value="" disabled selected>Selecciona método de pago</option>
-        <option value="Efectivo">Efectivo</option>
-        <option value="Tarjeta">Tarjeta</option>
-        <option value="Pendiente">Pendiente</option>
-    </select>
-
-    <label><strong>Aplicar Descuento:</strong></label>
-    <select class="form-select form-select-sm mb-2 descuento">
-        <option value="" disabled selected>Selecciona algun descuento</option>
-        <option value="Descuento Compas">Descuento Compas</option>
-        <option value="Descuento Especial">Descuento Especial</option>
-        <option value="Descuento Medio">Descuento Medio</option>
-        <option value="Descuento Antojitos">Descuento Antojitos</option>
-        <option value="Descuento Boing">Descuento Boing</option>
-        <option value="Descuento Coca-Cola">Descuento Coca-Cola</option>
-    </select>
-
-    <div class="d-flex gap-2">
-        <button class="btn btn-primary btn-sm imprimir-ticket">🧾 Imprimir ticket</button>
-        <button class="btn btn-success btn-sm marcar-guardado">Guardar</button>
-        <button class="btn btn-warning btn-sm marcar-descuento">Aplicar Descuento</button>
-        <button class="btn btn-danger btn-sm ms-auto eliminar">🗑️ Eliminar</button>
-    </div>
-    <hr>
-`;
+            card.innerHTML = `
+                <h5>Mesa: ${pedido.mesaId || "Desconocida"}</h5>
+                <p><strong>Mesera:</strong> ${pedido.mesera}</p>
+                <p><strong>Cliente:</strong> ${pedido.cliente}</p>
+                <ul>${listaProductosHTML}</ul>
+                <p><strong>Total:</strong> $${totalOriginal.toFixed(2)}</p>
+                ${
+                    pedido.descuento
+                        ? `<p><strong>Descuento:</strong> ${pedido.descuento} -$${pedido.montoDescuento.toFixed(2)}</p>
+                           <p><strong>Total con Descuento:</strong> $${total.toFixed(2)}</p>`
+                        : ""
+                }
+                <label><strong>Método de Pago:</strong></label>
+                <select class="form-select form-select-sm mb-2 metodo-pago">
+                    <option value="" disabled selected>Selecciona método de pago</option>
+                    <option value="Efectivo">Efectivo</option>
+                    <option value="Tarjeta">Tarjeta</option>
+                    <option value="Pendiente">Pendiente</option>
+                </select>
+                <label><strong>Aplicar Descuento:</strong></label>
+                <select class="form-select form-select-sm mb-2 descuento">
+                    <option value="" disabled selected>Selecciona algun descuento</option>
+                    <option value="Descuento Compas">Descuento Compas</option>
+                    <option value="Descuento Especial">Descuento Especial</option>
+                    <option value="Descuento Medio">Descuento Medio</option>
+                    <option value="Descuento Antojitos">Descuento Antojitos</option>
+                    <option value="Descuento Boing">Descuento Boing</option>
+                    <option value="Descuento Coca-Cola">Descuento Coca-Cola</option>
+                </select>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-primary btn-sm imprimir-ticket">🧾 Imprimir ticket</button>
+                    <button class="btn btn-success btn-sm marcar-guardado">Guardar</button>
+                    <button class="btn btn-warning btn-sm marcar-descuento">Aplicar Descuento</button>
+                    <button class="btn btn-danger btn-sm ms-auto eliminar">🗑️ Eliminar</button>
+                </div>
+                <hr>
+            `;
             fragment.appendChild(card);
         });
 
