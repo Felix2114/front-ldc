@@ -770,8 +770,7 @@ async function mostrarVentas() {
 
         pedidosFiltrados.forEach((pedido, index) => {
             const numeroPedido = index + 1;
-            const fechaPedido = new Date(pedido.fecha._seconds * 1000);
-            const fechaFormateada = fechaPedido.toLocaleString();
+            const fechaFormateada = pedido.fecha; 
 
             total += pedido.total;
 

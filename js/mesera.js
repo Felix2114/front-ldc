@@ -137,21 +137,19 @@ const listasProductos = [
             }
         });
     }
-
 async function cargarOrdenes() {
     const respuesta = await fetch(`${apiURL}/pedidos/estado/pendiente`);
     const pedidos = await respuesta.json();
 
     const hoy = new Date();
+    const hoyStr = hoy.toISOString().split("T")[0]; // "2025-08-21"
+
     const listaPendientes = document.getElementById("listaOrdenesPendientes");
     listaPendientes.innerHTML = "";
 
     pedidos.forEach(pedido => {
-        const fechaPedido = new Date(pedido.fecha._seconds * 1000);
-
-        const mismoDia = fechaPedido.getFullYear() === hoy.getFullYear() &&
-                         fechaPedido.getMonth() === hoy.getMonth() &&
-                         fechaPedido.getDate() === hoy.getDate();
+        // 👇 Ahora comparamos directo con el string que guardamos
+        const mismoDia = pedido.fecha === hoyStr;
 
         if (pedido.estado === "pendiente" && mismoDia) {
             const div = document.createElement("div");
@@ -172,31 +170,31 @@ async function cargarOrdenes() {
                 .map(([nombre, datos]) => `<li>${nombre} x${datos.cantidad} - $${datos.subtotal.toFixed(2)}</li>`)
                 .join("");
 
-           div.innerHTML = `
-    <div style="text-align: right;">
-        <span class="badge ${pedido.entregado ? 'bg-success' : 'bg-warning'}">
-            Entrega ${pedido.entregado ? 'lista' : 'pendiente'}
-        </span>
-    </div>
+            div.innerHTML = `
+                <div style="text-align: right;">
+                    <span class="badge ${pedido.entregado ? 'bg-success' : 'bg-warning'}">
+                        Entrega ${pedido.entregado ? 'lista' : 'pendiente'}
+                    </span>
+                </div>
 
-    <h5>🪑 Mesa ${pedido.mesaId} - Mesera: ${pedido.mesera}</h5>
-    <p><strong>Nota:</strong> ${pedido.nota}</p>
-    <p><strong>Cliente:</strong> ${pedido.cliente}</p>
-    <ul>
-        ${listaProductosHTML}
-    </ul>
-    <strong>Total:</strong> $${pedido.total.toFixed(2)}
-    
-    <div class="mt-2 d-flex">
-        <div>
-            <button class="btn btn-warning btn-sm me-1" id="editarPedido${pedido.id}">✏️ Editar</button>
-            <button class="btn btn-success btn-sm me-1" id="ordenEntregada${pedido.id}">✅ Orden Entregada</button>
-            <button class="btn btn-danger btn-sm me-1" id="finalizarAtencion${pedido.id}">🛑 Finalizar Atención</button>
-        </div>
-        <button class="btn btn-danger btn-sm ms-auto" id="eliminarPedido${pedido.id}">🗑️ Eliminar</button>
-    </div>
-`;
-
+                <h5>🪑 Mesa ${pedido.mesaId} - Mesera: ${pedido.mesera}</h5>
+                <p><strong>Nota:</strong> ${pedido.nota}</p>
+                <p><strong>Cliente:</strong> ${pedido.cliente}</p>
+                <p><strong>Fecha:</strong> ${pedido.fechaCompleta || pedido.fecha}</p>
+                <ul>
+                    ${listaProductosHTML}
+                </ul>
+                <strong>Total:</strong> $${pedido.total.toFixed(2)}
+                
+                <div class="mt-2 d-flex">
+                    <div>
+                        <button class="btn btn-warning btn-sm me-1" id="editarPedido${pedido.id}">✏️ Editar</button>
+                        <button class="btn btn-success btn-sm me-1" id="ordenEntregada${pedido.id}">✅ Orden Entregada</button>
+                        <button class="btn btn-danger btn-sm me-1" id="finalizarAtencion${pedido.id}">🛑 Finalizar Atención</button>
+                    </div>
+                    <button class="btn btn-danger btn-sm ms-auto" id="eliminarPedido${pedido.id}">🗑️ Eliminar</button>
+                </div>
+            `;
 
             listaPendientes.appendChild(div);
 
@@ -218,24 +216,22 @@ async function cargarOrdenes() {
                 }
             });
 
-
             document.getElementById(`eliminarPedido${pedido.id}`).addEventListener("click", async () => {
-    const confirmar = confirm("¿Estás seguro de que quieres eliminar este pedido?");
-    if (!confirmar) return;
+                const confirmar = confirm("¿Estás seguro de que quieres eliminar este pedido?");
+                if (!confirmar) return;
 
-    try {
-        await fetch(`${apiURL}/pedidos/eliminar/${pedido.id}`, {
-            method: "DELETE",
-            headers: { "Content-Type": "application/json" }
-        });
-        alert("Pedido eliminado exitosamente");
-        cargarOrdenes(); // recargar la lista
-    } catch (error) {
-        console.error("Error al eliminar pedido:", error);
-        alert("Ocurrió un error al eliminar el pedido.");
-    }
-});
-
+                try {
+                    await fetch(`${apiURL}/pedidos/eliminar/${pedido.id}`, {
+                        method: "DELETE",
+                        headers: { "Content-Type": "application/json" }
+                    });
+                    alert("Pedido eliminado exitosamente");
+                    cargarOrdenes(); // recargar la lista
+                } catch (error) {
+                    console.error("Error al eliminar pedido:", error);
+                    alert("Ocurrió un error al eliminar el pedido.");
+                }
+            });
 
             document.getElementById(`finalizarAtencion${pedido.id}`).addEventListener("click", async () => {
                 try {
@@ -839,12 +835,17 @@ async function enviarPedido(pedido) {
 
         // ✅ Generar folio justo antes de guardar
         const folio = await obtenerYActualizarFolio();
+        const ahora = new Date();
+        const fecha = ahora.toISOString().split("T")[0];  // "2025-08-21"
+        const fechaCompleta = ahora.toLocaleString();     // "21/8/2025 10:32:15"
+
 
         const pedidoDocRef = await addDoc(collection(db, "pedidos"), {
             folio: folio,
             entregado: false,
             estado: "pendiente",
-            fecha: new Date(),
+            fecha: fecha,               
+            fechaCompleta: fechaCompleta,
             mesaId: pedido.mesa.toString(),
             mesera: pedido.mesera || "Anónimo",
             cliente: pedido.cliente || "",
