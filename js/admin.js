@@ -646,7 +646,6 @@ function imprimirTicketInventario(bebidasGlobal) {
     `);
 }
 
-
 function imprimirResumenVentas(pedidos) {
     const fechaSeleccionada = document.getElementById("fechaVentas").value;
 
@@ -655,17 +654,11 @@ function imprimirResumenVentas(pedidos) {
         return;
     }
 
-    const [year, month, day] = fechaSeleccionada.split("-");
-    const fechaInput = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
-
     const pedidosFiltrados = pedidos.filter(pedido => {
         if (pedido.estado !== "listo") return false;
-        const fechaPedido = new Date(pedido.fecha._seconds * 1000);
-        return (
-            fechaPedido.getFullYear() === fechaInput.getFullYear() &&
-            fechaPedido.getMonth() === fechaInput.getMonth() &&
-            fechaPedido.getDate() === fechaInput.getDate()
-        );
+
+        // ✅ Comparamos directo las cadenas YYYY-MM-DD
+        return pedido.fecha === fechaSeleccionada;
     });
 
     if (pedidosFiltrados.length === 0) {
