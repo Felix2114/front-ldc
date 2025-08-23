@@ -61,6 +61,10 @@ const listasProductos = [
 
       cargarMesas();
        cargarMenu();
+       
+
+
+        
 //setInterval(cargarMesas, 15000);
   
 
@@ -248,6 +252,7 @@ async function cargarOrdenes() {
         }
     });
 }
+
 
 
 // ACTUALIZAR CANTIDAD DEL PEDIO
@@ -580,6 +585,7 @@ async function cargarOrdenes() {
 
 
 
+
     function generarIdUnico() {
     return Math.random().toString(36).substr(2, 9); // por ejemplo: "a1b2c3d4e"
 }
@@ -682,6 +688,47 @@ const productosFormateados = Object.values(productosMap);
     
 
 
+       //BOTON PRINCIPAL CONFIRMAR PEDIDO
+    botonConfirmar.addEventListener("click", () => {
+        if (pedidoActual.items.length === 0) {
+            alert("⚠️ No hay productos en el pedido.");
+            return;
+        }
+    
+        //  Limpiar contenido previo antes de actualizar
+        contenidoModalPedido.innerHTML = "";
+    
+        // Generar la lista de productos en el modal
+        pedidoActual.items.forEach(item => {
+            let div = document.createElement("div");
+            div.classList.add("d-flex", "justify-content-between", "border-bottom", "p-2");
+            div.innerHTML = `<span>${item.nombre} x${item.cantidad}</span> <strong>$${item.precio * item.cantidad}</strong>`;
+            contenidoModalPedido.appendChild(div);
+        });
+    
+        // Mostrar el modal correctamente
+        const modalPedido = new bootstrap.Modal(document.getElementById("modalPedido"));
+        modalPedido.show();
+    });
+    
+
+
+    //BOTON PRINCIPAL CANCELAR PEDIDO
+    botonCancelar.addEventListener("click", () => {
+        if (confirm("¿Seguro que quieres cancelar el pedido?")) {
+            limpiarPedido();
+        }
+    });
+
+
+    //LIMPIAR PEDIDO
+    function limpiarPedido() {
+        pedidoActual = { fecha: new Date().toISOString().split("T")[0], mesa: null, mesera: "", items: [] };
+        document.getElementById("mesaSeleccionada").textContent = "";
+        mostrarPedido();
+        guardarPedidoLocal();
+    }
+       
    
     //CARGAR MESAS
    async function cargarMesas() {
@@ -835,26 +882,42 @@ async function enviarPedido(pedido) {
 
         // ✅ Generar folio justo antes de guardar
         const folio = await obtenerYActualizarFolio();
-        const ahora = new Date();
-        const fecha = ahora.toISOString().split("T")[0];  // "2025-08-21"
-        const fechaCompleta = ahora.toLocaleString();     // "21/8/2025 10:32:15"
+     const ahora = new Date();
 
+// --- Fecha solo (YYYY-MM-DD) en horario local ---
+const year = ahora.getFullYear();
+const month = String(ahora.getMonth() + 1).padStart(2, "0"); // getMonth() empieza en 0
+const day = String(ahora.getDate()).padStart(2, "0");
+const fecha = `${year}-${month}-${day}`;   // ej: "2025-08-22"
 
-        const pedidoDocRef = await addDoc(collection(db, "pedidos"), {
-            folio: folio,
-            entregado: false,
-            estado: "pendiente",
-            fecha: fecha,               
-            fechaCompleta: fechaCompleta,
-            mesaId: pedido.mesa.toString(),
-            mesera: pedido.mesera || "Anónimo",
-            cliente: pedido.cliente || "",
-            nota: pedido.nota || "",
-            total: total,
-            guardado: false,
-            descuento: "",
-            metodo_Pago: "",
-        });
+// --- Fecha completa legible (local) ---
+const fechaCompleta = ahora.toLocaleString("es-MX", {
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+  hour: "2-digit",
+  minute: "2-digit",
+  second: "2-digit",
+  hour12: true
+});
+
+// Guardar en Firestore
+const pedidoDocRef = await addDoc(collection(db, "pedidos"), {
+  folio: folio,
+  entregado: false,
+  estado: "pendiente",
+  fecha: fecha,               // ✅ siempre YYYY-MM-DD local
+  fechaCompleta: fechaCompleta, // ✅ legible para mostrar
+  mesaId: pedido.mesa.toString(),
+  mesera: pedido.mesera || "Anónimo",
+  cliente: pedido.cliente || "",
+  nota: pedido.nota || "",
+  total: total,
+  guardado: false,
+  descuento: "",
+  metodo_Pago: "",
+});
+
 
         const productosRef = collection(pedidoDocRef, "productos");
 
@@ -966,46 +1029,7 @@ async function enviarPedido(pedido) {
 
 
 
-    //BOTON PRINCIPAL CONFIRMAR PEDIDO
-    botonConfirmar.addEventListener("click", () => {
-        if (pedidoActual.items.length === 0) {
-            alert("⚠️ No hay productos en el pedido.");
-            return;
-        }
-    
-        //  Limpiar contenido previo antes de actualizar
-        contenidoModalPedido.innerHTML = "";
-    
-        // Generar la lista de productos en el modal
-        pedidoActual.items.forEach(item => {
-            let div = document.createElement("div");
-            div.classList.add("d-flex", "justify-content-between", "border-bottom", "p-2");
-            div.innerHTML = `<span>${item.nombre} x${item.cantidad}</span> <strong>$${item.precio * item.cantidad}</strong>`;
-            contenidoModalPedido.appendChild(div);
-        });
-    
-        // Mostrar el modal correctamente
-        const modalPedido = new bootstrap.Modal(document.getElementById("modalPedido"));
-        modalPedido.show();
-    });
-    
 
-
-    //BOTON PRINCIPAL CANCELAR PEDIDO
-    botonCancelar.addEventListener("click", () => {
-        if (confirm("¿Seguro que quieres cancelar el pedido?")) {
-            limpiarPedido();
-        }
-    });
-
-
-    //LIMPIAR PEDIDO
-    function limpiarPedido() {
-        pedidoActual = { fecha: new Date().toISOString().split("T")[0], mesa: null, mesera: "", items: [] };
-        document.getElementById("mesaSeleccionada").textContent = "";
-        mostrarPedido();
-        guardarPedidoLocal();
-    }
 
 
     async function actualizarDatos() {
