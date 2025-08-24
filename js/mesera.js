@@ -146,7 +146,12 @@ async function cargarOrdenes() {
     const pedidos = await respuesta.json();
 
     const hoy = new Date();
-    const hoyStr = hoy.toISOString().split("T")[0]; // "2025-08-21"
+
+    // 👉 Obtener YYYY-MM-DD en hora local
+    const yyyy = hoy.getFullYear();
+    const mm = String(hoy.getMonth() + 1).padStart(2, "0");
+    const dd = String(hoy.getDate()).padStart(2, "0");
+    const hoyStr = `${yyyy}-${mm}-${dd}`; // "2025-08-23"
 
     const listaPendientes = document.getElementById("listaOrdenesPendientes");
     listaPendientes.innerHTML = "";
