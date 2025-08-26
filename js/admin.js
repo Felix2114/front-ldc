@@ -29,6 +29,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const listaComidas = document.getElementById("tablaComidas");
     const listaSnacks = document.getElementById("tablaSnacks");
     const listaAntojitos = document.getElementById("tablaAntojitos");
+    const listaMariscos = document.getElementById("tablaMariscos");
     const listaBebidas = document.getElementById("tablaBebidas");
     const listaMesas = document.getElementById("listaMesas");
     document.getElementById("fechaVentas").valueAsDate = new Date();
@@ -393,15 +394,20 @@ lista.onclick = async (e) => {
         listaComidas.innerHTML = "";
         listaSnacks.innerHTML = "";
         listaAntojitos.innerHTML = "";
+        listaMariscos.innerHTML = "";
 
         const comidas = menu.filter(item => item.tipo === 'comida');
         const snacks = menu.filter(item => item.tipo === 'snack');
         const antojitos = menu.filter(item => item.tipo == 'antojito')
+        const mariscos = menu.filter(item => item.tipo == 'marisco')
 
         comidas.forEach(comida => agregarFilaComida(comida, listaComidas));
         snacks.forEach(snack => agregarFilaComida(snack, listaSnacks));
         antojitos.forEach(antojitos => agregarFilaComida(antojitos, listaAntojitos));
+        mariscos.forEach(mariscos => agregarFilaComida(mariscos, listaMariscos));
     }
+
+    
 
    function mostrarInventario(inventario) {
     listaBebidas.innerHTML = "";
@@ -1047,6 +1053,29 @@ async function mostrarVentas() {
             alert("Antojito agregado correctamente.");
         } catch (error) {
             console.error("Error al agregar Antojito:", error);
+        }
+    });
+
+
+    document.getElementById("agregarMarisco").addEventListener("click", async () => {
+        const nombre = prompt("Nombre del Marisco:");
+        const precio = parseFloat(prompt("Precio:"));
+
+        if (!nombre || isNaN(precio)) {
+            alert("Datos inválidos");
+            return;
+        }
+
+        try {
+            await fetch(apiURL, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ nombre, precio, tipo: "marisco" })
+            });
+            cargarDatos();
+            alert("Marisco agregado correctamente.");
+        } catch (error) {
+            console.error("Error al agregar Marisco:", error);
         }
     });
 
