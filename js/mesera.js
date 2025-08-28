@@ -26,6 +26,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const listaBebidas = document.getElementById("listaBebidas");
     const listaSnacks = document.getElementById("listaSnacks");
     const listaAntojitos = document.getElementById("listaAntojitos");
+    const listaMariscos = document.getElementById("listaMariscos");
     //const listaOrdenesPendientes = document.getElementById("listaOrdenesPendientes");
     //const listaHistorialPedidos = document.getElementById("listaHistorialPedidos");
     const botonCancelar = document.getElementById("cancelarPedido");
@@ -41,14 +42,16 @@ const listasProductos = [
         document.getElementById("listaComidas"),
         document.getElementById("listaBebidas"),
         document.getElementById("listaSnacks"),
-        document.getElementById("listaAntojitos")
+        document.getElementById("listaAntojitos"),
+        document.getElementById("listaMariscos")
     ];
 
     const listasProductosEditar = [
         document.getElementById("listaEditarComidas"),
         document.getElementById("listaEditarBebidas"),
         document.getElementById("listaEditarSnacks"),
-       document.getElementById("listaEditarAntojitos")
+       document.getElementById("listaEditarAntojitos"),
+       document.getElementById("listaEditarMariscos")
     ];
 
  let pedidoEditar = {
@@ -275,7 +278,8 @@ async function cargarOrdenes() {
     const editarContenedores = [
         document.getElementById('listaEditarComidas'),
         document.getElementById('listaEditarBebidas'),
-        document.getElementById('listaEditarSnacks')
+        document.getElementById('listaEditarSnacks'),
+        document.getElementById('listaEditarMariscos')
     ];
 
     editarContenedores.forEach(contenedor => {
@@ -433,11 +437,13 @@ async function cargarOrdenes() {
         const listaEditarBebidas = document.getElementById("listaEditarBebidas");
         const listaEditarSnacks = document.getElementById("listaEditarSnacks");
         const listaEditarAntojitos = document.getElementById("listaEditarAntojitos");
+        const listaEditarMariscos = document.getElementById("listaEditarMariscos");
 
         listaEditarComidas.innerHTML = '';
         listaEditarBebidas.innerHTML = '';
         listaEditarSnacks.innerHTML = '';
         listaEditarAntojitos.innerHTML = '';
+        listaEditarMariscos.innerHTML = '';
 
         // ✅ Cargar comidas y snacks
         menu.forEach(item => {
@@ -452,6 +458,9 @@ async function cargarOrdenes() {
             }
             else if (item.tipo === "antojito") {
                 agregarItemsListaEditar([item], listaEditarAntojitos, cantidadInicial);
+            }
+            else if (item.tipo === "marisco") {
+                agregarItemsListaEditar([item], listaEditarMariscos, cantidadInicial);
             }
         });
 
@@ -822,6 +831,9 @@ const productosFormateados = Object.values(productosMap);
                 }
                 else if (item.tipo === "antojito" && !document.querySelector(`[data-nombre="${item.nombre}"]`)) {
                     agregarItemsLista([item], listaAntojitos);
+                }
+                else if (item.tipo === "marisco" && !document.querySelector(`[data-nombre="${item.nombre}"]`)) {
+                    agregarItemsLista([item], listaMariscos);
                 }
             });
     
