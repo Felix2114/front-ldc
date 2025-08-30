@@ -16,7 +16,7 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 
-
+let spansEditar = {};
 
 
 document.addEventListener("DOMContentLoaded", async () => {
@@ -270,26 +270,6 @@ async function cargarOrdenes() {
         cantidadSpan.textContent = item ? `x${item.cantidad}` : "x0";
     }
 
-  function actualizarCantidadEditar(nombre) {
-    const totalCantidad = pedidoEditar.items
-        .filter(item => item.nombre === nombre)
-        .reduce((suma, item) => suma + item.cantidad, 0);
-
-    const editarContenedores = [
-        document.getElementById('listaEditarComidas'),
-        document.getElementById('listaEditarBebidas'),
-        document.getElementById('listaEditarSnacks'),
-        document.getElementById('listaEditarMariscos')
-    ];
-
-    editarContenedores.forEach(contenedor => {
-        const spans = contenedor.querySelectorAll(`span[data-nombre='${CSS.escape(nombre)}']`);
-        spans.forEach(span => {
-            span.textContent = `x${totalCantidad}`;
-        });
-    });
-}
-
 
 
 
@@ -306,60 +286,10 @@ async function cargarOrdenes() {
         }
     }
 
-    //ELIMINAR PRODUCTO EN LA LISTA
-    function eliminarProductoEditar(nombre) {
-        let index = pedidoEditar.items.findIndex(item => item.nombre === nombre);
-        if (index !== -1) {
-            if (pedidoEditar.items[index].cantidad > 1) {
-                pedidoEditar.items[index].cantidad--;
-            } else {
-                pedidoEditar.items.splice(index, 1);
-            }
-            guardarPedidoLocal();
-        }
-    }
-
-
-
-
     
-    //console.log("Pedido recuperado:", pedidoActual.items); 
-
-    
-     //console.log("id pedido ediar",Pedido editar actualizado.items);
-     //Pedido editar actualizado
-
-//AGUAS ACA QUE SI MODIFICO MAL SE ROMP
-
-    function abrirModalEditarPedido(pedido) {
-    pedidoEditar.id = pedido.id;
-    pedidoEditar.mesa = pedido.mesaId;
-    pedidoEditar.mesera = pedido.mesera;
-    pedidoEditar.nota = pedido.nota || "";
-
-    // ✅ Solo productos no entregados (estado: false)
-    pedidoEditar.items = pedido.productos
-        .filter(prod => prod.estado === false)
-        .map(prod => ({
-            nombre: prod.nombre,
-            comidaId: prod.comidaId || prod.id,
-            cantidad: prod.cantidad,
-            precio: prod.precio || prod.subtotal,
-            estado: false
-        }));
-
-        document.getElementById('notaEditar').value = pedidoEditar.nota;
-
-    document.getElementById('mesaEditando').textContent = pedido.mesaId;
-    cargarMenuEditar(pedido);
-    const modal = new bootstrap.Modal(document.getElementById('editarPedidoModal'));
-    modal.show();
-}
 
 
 
-    
-    
     //AGREGAR PRODUCTOS
     function agregarProducto(item) {
         const productoExistente = pedidoActual.items.find(p => p.nombre === item.nombre);
@@ -378,44 +308,15 @@ async function cargarOrdenes() {
         console.log("Pedido actualizado:", pedidoActual.items);
     }
 
-    //AGREGAR PRODUCTOS EDITAR 
-  function agregarProductoEditar(item) {
-    // Buscar producto con mismo nombre y precio, sin importar estado
-    const productoExistente = pedidoEditar.items.find(p => 
-        p.nombre === item.nombre && 
-        p.precio === item.precio
-    );
+    
+    //console.log("Pedido recuperado:", pedidoActual.items); 
 
-    if (productoExistente) {
-        if (productoExistente.estado === false) {
-            // Si está pendiente, aumento cantidad
-            productoExistente.cantidad++;
-        } else {
-            // Si ya está entregado (true), agrego uno nuevo pendiente
-            pedidoEditar.items.push({
-                id: item.id || generarIdUnico(),
-                nombre: item.nombre,
-                cantidad: 1,
-                precio: item.precio,
-                estado: false
-            });
-        }
-    } else {
-        // No existe producto, agrego nuevo pendiente
-        pedidoEditar.items.push({
-            id: item.id || generarIdUnico(),
-            nombre: item.nombre,
-            cantidad: 1,
-            precio: item.precio,
-            estado: false
-        });
-    }
-
-    console.log("Pedido editar actualizado:", pedidoEditar.items);
-}
+    
+     //console.log("id pedido ediar",Pedido editar actualizado.items);
+     //Pedido editar actualizado
 
 
-   async function cargarMenuEditar(pedido) {
+     async function cargarMenuEditar(pedido) {
     try {
         const [menuResponse, inventarioResponse] = await Promise.all([
             fetch(`${apiURL}/menu`),
@@ -479,9 +380,98 @@ async function cargarOrdenes() {
     }
 }
 
+/////////////////////////////////////////////////////////////////////////////7
 
-    //EDITAR PEDIDO
-   function agregarItemsListaEditar(items, lista, cantidadInicial = 0) {
+// 🗂️ Mapa global de referencias a spans por producto
+if (!window.spansEditar) window.spansEditar = {};
+
+// 👉 Abrir modal de edición
+function abrirModalEditarPedido(pedido) {
+    pedidoEditar.id = pedido.id;
+    pedidoEditar.mesa = pedido.mesaId;
+    pedidoEditar.mesera = pedido.mesera;
+    pedidoEditar.nota = pedido.nota || "";
+
+    // ✅ Solo productos no entregados
+    pedidoEditar.items = pedido.productos
+        .filter(prod => prod.estado === false)
+        .map(prod => ({
+            nombre: prod.nombre,
+            comidaId: prod.comidaId || prod.id,
+            cantidad: prod.cantidad,
+            precio: prod.precio || prod.subtotal,
+            estado: false
+        }));
+
+    document.getElementById('notaEditar').value = pedidoEditar.nota;
+    document.getElementById('mesaEditando').textContent = pedido.mesaId;
+
+    cargarMenuEditar(pedido);
+
+    const modal = new bootstrap.Modal(document.getElementById('editarPedidoModal'));
+    modal.show();
+}
+
+// 👉 Eliminar producto
+function eliminarProductoEditar(nombre) {
+    let index = pedidoEditar.items.findIndex(item => item.nombre === nombre);
+    if (index !== -1) {
+        if (pedidoEditar.items[index].cantidad > 1) {
+            pedidoEditar.items[index].cantidad--;
+        } else {
+            pedidoEditar.items.splice(index, 1);
+        }
+        guardarPedidoLocal();
+    }
+}
+
+// 👉 Agregar producto
+function agregarProductoEditar(item) {
+    const productoExistente = pedidoEditar.items.find(p => 
+        p.nombre === item.nombre && 
+        p.precio === item.precio
+    );
+
+    if (productoExistente) {
+        if (productoExistente.estado === false) {
+            productoExistente.cantidad++;
+        } else {
+            pedidoEditar.items.push({
+                id: item.id || generarIdUnico(),
+                nombre: item.nombre,
+                cantidad: 1,
+                precio: item.precio,
+                estado: false
+            });
+        }
+    } else {
+        pedidoEditar.items.push({
+            id: item.id || generarIdUnico(),
+            nombre: item.nombre,
+            cantidad: 1,
+            precio: item.precio,
+            estado: false
+        });
+    }
+
+    guardarPedidoLocal();
+}
+
+// 👉 Actualizar cantidad en todos los spans del producto
+function actualizarCantidadEditar(nombre) {
+    const totalCantidad = pedidoEditar.items
+        .filter(item => item.nombre === nombre)
+        .reduce((suma, item) => suma + item.cantidad, 0);
+
+    if (spansEditar[nombre]) {
+        spansEditar[nombre].forEach(span => {
+            span.textContent = "x" + totalCantidad;
+        });
+    }
+}
+
+// 👉 Crear lista de productos para editar
+function agregarItemsListaEditar(items, lista, cantidadInicial = 0) {
     if (!Array.isArray(items)) {
         console.warn("⚠️ Error: `items` no es un array válido.");
         return;
@@ -504,20 +494,38 @@ async function cargarOrdenes() {
         cantidadSpan.setAttribute("data-nombre", item.nombre);
         cantidadSpan.textContent = `x${cantidadInicial}`;
 
+        // Guardar referencia global
+        if (!spansEditar[item.nombre]) spansEditar[item.nombre] = [];
+        spansEditar[item.nombre].push(cantidadSpan);
+
         let btnAdd = document.createElement("button");
         btnAdd.classList.add("btn", "btn-sm", "btn-success", "ms-2", "add-button");
         btnAdd.textContent = "+";
         btnAdd.onclick = () => {
+            btnAdd.disabled = true; // evitar spam
+            let cantidad = parseInt(cantidadSpan.textContent.replace("x", "")) + 1;
+            cantidadSpan.textContent = "x" + cantidad;
+
             agregarProductoEditar({ nombre: item.nombre, precio: item.precio });
             actualizarCantidadEditar(item.nombre);
+
+            setTimeout(() => btnAdd.disabled = false, 150); // reactivar rápido
         };
 
         let btnRemove = document.createElement("button");
         btnRemove.classList.add("btn", "btn-sm", "btn-danger", "ms-2", "remove-button");
         btnRemove.textContent = "-";
         btnRemove.onclick = () => {
-            eliminarProductoEditar(item.nombre);  
-            actualizarCantidadEditar(item.nombre);
+            btnRemove.disabled = true;
+            let cantidad = parseInt(cantidadSpan.textContent.replace("x", ""));
+            if (cantidad > 0) {
+                cantidad--;
+                cantidadSpan.textContent = "x" + cantidad;
+
+                eliminarProductoEditar(item.nombre);
+                actualizarCantidadEditar(item.nombre);
+            }
+            setTimeout(() => btnRemove.disabled = false, 150);
         };
 
         let container = document.createElement("div");
@@ -532,7 +540,6 @@ async function cargarOrdenes() {
         lista.appendChild(li);
     });
 }
-
 
 
 

@@ -1,22 +1,108 @@
-.pedido-card {
-    background-color: #fefefe;
-    border: 1px solid #dee2e6;
-    border-radius: 10px;
-    padding: 15px;
-    margin-bottom: 15px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+/* Tarjeta principal de cada pedido (grande para tablet) */
+.card {
+    border-radius: 25px;
+    background: linear-gradient(145deg, #fffdfa, #fdf6f1); /* fondo cálido */
+    box-shadow: 0 12px 35px rgba(0, 0, 0, 0.12);
+    transition: transform 0.3s, box-shadow 0.3s;
+    padding: 40px !important; /* más espacio */
+    border-left: 15px solid #007bff !important;
+    margin-bottom: 30px !important;
+    min-height: 300px; /* asegurar altura mínima */
 }
 
-.pedido-card h5 {
-    margin-top: 0;
-    color: #343a40;
+/* Hover más pronunciado */
+.card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.2);
 }
 
-.pedido-card ul {
-    padding-left: 20px;
-    margin: 10px 0;
+/* Títulos de mesa */
+.card-title {
+    font-size: 2.8rem !important;
+    font-weight: 900;
+    color: #4b3c2f;
+    position: relative;
+    padding-left: 60px;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.15);
 }
 
-.pedido-card li {
-    margin-bottom: 5px;
+/* Icono delante del título */
+.card-title::before {
+    content: "🍽️";
+    position: absolute;
+    left: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 2.8rem;
+}
+
+/* Subtítulos de mesera y cliente */
+.card-subtitle, .card h3 {
+    font-weight: 700;
+    color: #5a3e2b;
+    margin-bottom: 10px;
+    font-size: 1.8rem;
+}
+
+/* Nota del pedido */
+.card p {
+    font-size: 1.6rem !important;
+    color: #333;
+    background: #fff7f0;
+    border-left: 5px solid #d19c6b;
+    border-radius: 12px;
+    padding: 15px 20px;
+    box-shadow: inset 0 2px 6px rgba(0,0,0,0.08);
+}
+
+/* Lista de productos */
+.list-group-item {
+    background: #fff9f4 !important;
+    border-radius: 15px;
+    margin-bottom: 10px;
+    font-size: 1.7rem !important;
+    padding: 16px 24px !important;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 3px 6px 15px rgba(0,0,0,0.1);
+    transition: transform 0.2s, background 0.2s;
+}
+
+.list-group-item:hover {
+    background: #f8eee3 !important;
+    transform: translateX(4px);
+}
+
+/* Badge de cantidad o precio */
+.list-group-item .badge {
+    background-color: #d9534f;
+    color: #fff;
+    padding: 6px 12px;
+    font-size: 1.2rem;
+    border-radius: 12px;
+    box-shadow: 1px 3px 6px rgba(0,0,0,0.2);
+}
+
+/* Mensaje de pie de tarjeta */
+.card .text-end small {
+    font-size: 1.5rem !important;
+    color: #a7866d;
+    font-style: italic;
+}
+
+/* Ajustes generales para tablet */
+body {
+    font-family: "Segoe UI", Roboto, sans-serif;
+    background-color: #faf6f1;
+    color: #4b3c2f;
+}
+
+h2 {
+    font-weight: 900;
+    font-size: 2.8rem;
+    text-align: center;
+    margin-bottom: 40px;
+    color: #4b3c2f;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.05);
 }
