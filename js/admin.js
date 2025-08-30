@@ -132,6 +132,10 @@ async function cargarPedidosListosYMostrarConfirmar() {
                     <option value="Tarjeta">Tarjeta</option>
                     <option value="Pendiente">Pendiente</option>
                 </select>
+
+                <label><strong>Descuento manual ($):</strong></label>
+<input type="number" class="form-control form-control-sm mb-2 descuento-manual" placeholder="Ej: 50">
+
                 <label><strong>Aplicar Descuento:</strong></label>
                 <select class="form-select form-select-sm mb-2 descuento">
                     <option value="" disabled selected>Selecciona algun descuento</option>
@@ -213,7 +217,9 @@ lista.onclick = async (e) => {
     // 📌 Aplicar descuento
     if (e.target.classList.contains("marcar-descuento")) {
         const selectDescuento = card.querySelector(".descuento");
-        const descuento = selectDescuento.value.trim();
+        const inputDescuentoManual = card.querySelector(".descuento-manual");
+
+        let descuento = inputDescuentoManual.value.trim() || selectDescuento.value.trim();
 
         if (!descuento) {
             alert("Por favor, selecciona un descuento antes de aplicar.");
