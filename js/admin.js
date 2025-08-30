@@ -1,9 +1,17 @@
 let pedidosListos = [];
 let bebidasGlobal = [];
 
+// Firebase App (obligatorio siempre)
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-import { getFirestore } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
-import { updateDoc, doc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+// Firestore
+import { 
+  getFirestore, 
+  collection, 
+  getDocs, 
+  updateDoc, 
+  doc 
+} from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyC_gRa6lymckHIrZQwUyQEfnuvT-oAOdwk",
@@ -843,12 +851,128 @@ async function mostrarVentas() {
 
         listaVentas.appendChild(btnImprimirResumen);
 
+        const btnImprimirPorTipo = document.createElement("button");
+btnImprimirPorTipo.textContent = "🖨️ Imprimir ventas por tipo";
+btnImprimirPorTipo.className = "btn btn-warning mt-2";
+btnImprimirPorTipo.addEventListener("click", () => imprimirVentasPorTipo(pedidosFiltrados));
+
+listaVentas.appendChild(btnImprimirPorTipo);
+
     } catch (error) {
         console.error("Error al mostrar ventas:", error);
         alert("❌ No se pudieron cargar las ventas.");
     }
 }
 
+async function imprimirVentasPorTipo(pedidos) {
+    try {
+        const fechaSeleccionada = document.getElementById("fechaVentas").value;
+
+        if (!fechaSeleccionada) {
+            alert("Selecciona una fecha para imprimir el resumen.");
+            return;
+        }
+
+        // 🔹 Filtrar pedidos por fecha y estado
+        const pedidosFiltrados = pedidos.filter(pedido => {
+            if (pedido.estado !== "listo") return false;
+            return pedido.fecha === fechaSeleccionada;
+        });
+
+        if (pedidosFiltrados.length === 0) {
+            alert("No hay ventas para la fecha seleccionada.");
+            return;
+        }
+
+        // 🔹 Traer menú para saber el tipo de cada producto
+        const menuSnapshot = await getDocs(collection(db, "menu"));
+        const menuMap = {};
+        menuSnapshot.forEach(doc => {
+            const data = doc.data();
+            menuMap[data.nombre] = data.tipo; 
+        });
+
+        // 🔹 Agrupar ventas por tipo
+        const ventasPorTipo = {};
+
+        //console.log(pedidosFiltrados);
+
+        pedidosFiltrados.forEach(pedido => {
+    if (!pedido.productos) return;   // aquí
+    pedido.productos.forEach(item => {  // aquí
+        const nombre = item.nombre;
+        const cantidad = item.cantidad || 1;
+        const tipo = menuMap[nombre] || "Desconocido";
+
+        if (!ventasPorTipo[tipo]) ventasPorTipo[tipo] = {};
+        if (!ventasPorTipo[tipo][nombre]) ventasPorTipo[tipo][nombre] = 0;
+
+        ventasPorTipo[tipo][nombre] += cantidad;
+    });
+});
+        // 🔹 Generar tabla HTML ordenada por tipo y nombre
+        let tablaHTML = "";
+        Object.keys(ventasPorTipo)
+            .sort() // 👉 Ordenar tipos alfabéticamente
+            .forEach(tipo => {
+                tablaHTML += `<h4 style="margin-top:10px;">${tipo.toUpperCase()}</h4>`;
+                tablaHTML += `<table><thead><tr><th>Producto</th><th>Cant.</th></tr></thead><tbody>`;
+                
+                Object.keys(ventasPorTipo[tipo])
+                    .sort() // 👉 Ordenar productos dentro de cada tipo
+                    .forEach(nombre => {
+                        tablaHTML += `<tr><td>${nombre}</td><td>${ventasPorTipo[tipo][nombre]}</td></tr>`;
+                    });
+                
+                tablaHTML += `</tbody></table>`;
+            });
+
+        // 🔹 Imprimir ticket
+        const ventana = window.open('', '', 'width=400,height=600');
+        ventana.document.write(`
+            <html>
+                <head>
+                    <title>Ventas por Tipo</title>
+                    <style>
+                        body { font-family: monospace; padding: 10px; margin: 0; text-align: center; }
+                        img.logo { width: 100px; margin-bottom: 10px; }
+                        h2 { margin: 0; }
+                        table { width: 100%; border-collapse: collapse; margin: 5px 0; }
+                        th, td { border-bottom: 1px dashed #000; padding: 4px; text-align: center; }
+                        h4 { margin: 8px 0 4px 0; font-size: 14px; text-decoration: underline; }
+                        .saludo { margin-top: 15px; font-size: 12px; }
+                    </style>
+                </head>
+                <body>
+                
+                    <img src="https://felix2114.github.io/front-ldc/images/LosDosCar.jpeg" class="logo" alt="Logo"><br>
+                    <div style="margin-top: 10px; margin-bottom: 10px;">
+                        <h1 style="margin: 0; font-size: 20px; letter-spacing: 1px; font-weight: bold;">LOS DOS CARNALES</h1>
+                        <p style="margin: 0; font-size: 12px; font-style: italic; color: #555;">Restaurante Familiar</p>
+                    </div>
+                    <h4>Ventas por Tipo</h4>
+                    <p><strong>Fecha:</strong> ${fechaSeleccionada}</p>
+                    <hr>
+                    ${tablaHTML}
+                    <hr>
+                    <p style="text-align:center;">¡Gracias por su esfuerzo!</p>
+                    <div class="saludo">#somosLosDosCarnales👬</div>
+
+                    <script>
+                        window.onload = function() {
+                            window.print();
+                            setTimeout(() => window.close(), 500);
+                        }
+                    </script>
+                </body>
+            </html>
+        `);
+
+    } catch (error) {
+        console.error("Error al generar ventas por tipo:", error);
+        alert("❌ No se pudo generar el resumen por tipo.");
+    }
+}
 
 
     function agregarFilaComida(producto, lista) {
