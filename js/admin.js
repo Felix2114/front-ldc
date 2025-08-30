@@ -869,7 +869,6 @@ listaVentas.appendChild(btnImprimirPorTipo);
         alert("❌ No se pudieron cargar las ventas.");
     }
 }
-
 async function imprimirVentasPorTipo(pedidos) {
     try {
         const fechaSeleccionada = document.getElementById("fechaVentas").value;
@@ -898,38 +897,53 @@ async function imprimirVentasPorTipo(pedidos) {
             menuMap[data.nombre] = data.tipo; 
         });
 
-        // 🔹 Agrupar ventas por tipo
+        // 🔹 Agrupar ventas por tipo y acumular subtotal
         const ventasPorTipo = {};
 
-        //console.log(pedidosFiltrados);
-
         pedidosFiltrados.forEach(pedido => {
-    if (!pedido.productos) return;   // aquí
-    pedido.productos.forEach(item => {  // aquí
-        const nombre = item.nombre;
-        const cantidad = item.cantidad || 1;
-        const tipo = menuMap[nombre] || "Desconocido";
+            if (!pedido.productos) return;
+            pedido.productos.forEach(item => {
+                const nombre = item.nombre;
+                const cantidad = item.cantidad || 1;
+                const precio = item.precio || 0;
+                const subtotal = cantidad * precio;
+                const tipo = menuMap[nombre] || "Desconocido";
 
-        if (!ventasPorTipo[tipo]) ventasPorTipo[tipo] = {};
-        if (!ventasPorTipo[tipo][nombre]) ventasPorTipo[tipo][nombre] = 0;
+                if (!ventasPorTipo[tipo]) ventasPorTipo[tipo] = { productos: {}, totalTipo: 0 };
+                if (!ventasPorTipo[tipo].productos[nombre]) ventasPorTipo[tipo].productos[nombre] = { cantidad: 0, precio: precio, subtotal: 0 };
 
-        ventasPorTipo[tipo][nombre] += cantidad;
-    });
-});
+                ventasPorTipo[tipo].productos[nombre].cantidad += cantidad;
+                ventasPorTipo[tipo].productos[nombre].subtotal += subtotal;
+                ventasPorTipo[tipo].totalTipo += subtotal;
+            });
+        });
+
         // 🔹 Generar tabla HTML ordenada por tipo y nombre
         let tablaHTML = "";
         Object.keys(ventasPorTipo)
-            .sort() // 👉 Ordenar tipos alfabéticamente
+            .sort()
             .forEach(tipo => {
                 tablaHTML += `<h4 style="margin-top:10px;">${tipo.toUpperCase()}</h4>`;
-                tablaHTML += `<table><thead><tr><th>Producto</th><th>Cant.</th></tr></thead><tbody>`;
+                tablaHTML += `<table><thead><tr><th>Producto</th><th>Precio</th><th>Cant.</th><th>Subtotal</th></tr></thead><tbody>`;
                 
-                Object.keys(ventasPorTipo[tipo])
-                    .sort() // 👉 Ordenar productos dentro de cada tipo
+                Object.keys(ventasPorTipo[tipo].productos)
+                    .sort()
                     .forEach(nombre => {
-                        tablaHTML += `<tr><td>${nombre}</td><td>${ventasPorTipo[tipo][nombre]}</td></tr>`;
+                        const prod = ventasPorTipo[tipo].productos[nombre];
+                        tablaHTML += `<tr>
+                            <td>${nombre}</td>
+                            <td>$${prod.precio.toFixed(2)}</td>
+                            <td>${prod.cantidad}</td>
+                            <td>$${prod.subtotal.toFixed(2)}</td>
+                        </tr>`;
                     });
-                
+
+                // Total por tipo
+                tablaHTML += `<tr>
+                    <td colspan="3" style="text-align:right; font-weight:bold;">TOTAL ${tipo}:</td>
+                    <td style="font-weight:bold;">$${ventasPorTipo[tipo].totalTipo.toFixed(2)}</td>
+                </tr>`;
+
                 tablaHTML += `</tbody></table>`;
             });
 
@@ -950,7 +964,6 @@ async function imprimirVentasPorTipo(pedidos) {
                     </style>
                 </head>
                 <body>
-                
                     <img src="https://felix2114.github.io/front-ldc/images/LosDosCar.jpeg" class="logo" alt="Logo"><br>
                     <div style="margin-top: 10px; margin-bottom: 10px;">
                         <h1 style="margin: 0; font-size: 20px; letter-spacing: 1px; font-weight: bold;">LOS DOS CARNALES</h1>
@@ -979,6 +992,7 @@ async function imprimirVentasPorTipo(pedidos) {
         alert("❌ No se pudo generar el resumen por tipo.");
     }
 }
+
 
 
     function agregarFilaComida(producto, lista) {
