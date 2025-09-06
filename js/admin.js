@@ -57,8 +57,9 @@ const month = String(hoy.getMonth() + 1).padStart(2, '0');
 const day = String(hoy.getDate()).padStart(2, '0');
 fechaInput.value = `${year}-${month}-${day}`; // 📌 Siempre muestra la fecha local
 
+    document.getElementById("btnCargarPedidos").addEventListener("click", () => {
     cargarPedidosListosYMostrarConfirmar();
-    setInterval(cargarPedidosListosYMostrarConfirmar, 20000);
+});
 
     // ⏳ Cargar el resto de datos en segundo plano
     cargarDatos();
