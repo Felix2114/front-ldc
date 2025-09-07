@@ -758,6 +758,102 @@ function imprimirResumenVentas(pedidos) {
 }
 
 
+function imprimirResumenMeseras(pedidos) {
+    const fechaSeleccionada = document.getElementById("fechaVentas").value;
+
+    if (!fechaSeleccionada) {
+        alert("Selecciona una fecha para imprimir el resumen por meseras.");
+        return;
+    }
+
+    // Filtramos pedidos listos y por la fecha
+    const pedidosFiltrados = pedidos.filter(pedido => {
+        if (pedido.estado !== "listo") return false;
+        return pedido.fecha === fechaSeleccionada;
+    });
+
+    if (pedidosFiltrados.length === 0) {
+        alert("No hay ventas para la fecha seleccionada.");
+        return;
+    }
+
+    // 🔹 Agrupar por mesera
+    const resumenMeseras = {};
+    pedidosFiltrados.forEach(pedido => {
+        const mesera = pedido.mesera || "Sin asignar";
+        if (!resumenMeseras[mesera]) {
+            resumenMeseras[mesera] = { pedidos: 0, total: 0 };
+        }
+        resumenMeseras[mesera].pedidos++;
+        resumenMeseras[mesera].total += pedido.total;
+    });
+
+    // 🔹 Generar tabla
+    let tablaHTML = `
+        <table>
+            <thead>
+                <tr>
+                    <th>Mesera</th>
+                    <th>Pedidos</th>
+                   
+                </tr>
+            </thead>
+            <tbody>
+    `;
+    Object.keys(resumenMeseras).forEach(mesera => {
+        tablaHTML += `
+            <tr>
+                <td>${mesera}</td>
+                <td>${resumenMeseras[mesera].pedidos}</td>
+                
+            </tr>
+        `;
+    });
+    tablaHTML += "</tbody></table>";
+
+    // 🔹 Imprimir
+    const ventana = window.open('', '', 'width=400,height=600');
+    ventana.document.write(`
+        <html>
+            <head>
+                <title>Resumen por Meseras</title>
+                <style>
+                    body { font-family: monospace; padding: 10px; margin: 0; text-align: center; }
+                    img.logo { width: 100px; margin-bottom: 10px; }
+                    h2 { margin: 0; }
+                    .info { text-align: left; margin: 10px 0; }
+                    table { width: 100%; border-collapse: collapse; margin: 10px 0; }
+                    th, td { border-bottom: 1px dashed #000; padding: 4px; text-align: center; }
+                    .total { font-weight: bold; margin-top: 10px; text-align: right; }
+                    .saludo { margin-top: 15px; font-size: 12px; }
+                </style>
+            </head>
+            <body>
+                <img src="https://felix2114.github.io/front-ldc/images/LosDosCar.jpeg" class="logo" alt="Logo"><br>
+                <div style="margin-top: 10px; margin-bottom: 10px;">
+                    <h1 style="margin: 0; font-size: 20px; letter-spacing: 1px; font-weight: bold;">LOS DOS CARNALES</h1>
+                    <p style="margin: 0; font-size: 12px; font-style: italic; color: #555;">Restaurante Familiar</p>
+                </div>
+                <h4>Resumen por Meseras</h4>
+                <p><strong>Fecha:</strong> ${fechaSeleccionada}</p>
+                <hr>
+                ${tablaHTML}
+                <hr>
+                <p style="text-align:center;">¡Gracias por su esfuerzo!</p>
+                <div class="saludo">#somosLosDosCarnales👬</div>
+
+                <script>
+                    window.onload = function() {
+                        window.print();
+                        setTimeout(() => window.close(), 500);
+                    }
+                </script>
+            </body>
+        </html>
+    `);
+}
+
+
 async function mostrarVentas() {
     const fechaSeleccionada = document.getElementById("fechaVentas").value;
     const listaVentas = document.getElementById("listaVentas");
@@ -862,6 +958,14 @@ async function mostrarVentas() {
 btnImprimirPorTipo.textContent = "🖨️ Imprimir ventas por tipo";
 btnImprimirPorTipo.className = "btn btn-warning mt-2";
 btnImprimirPorTipo.addEventListener("click", () => imprimirVentasPorTipo(pedidosFiltrados));
+
+
+const btnImprimirMeseras = document.createElement("button");
+btnImprimirMeseras.textContent = "🖨️ Imprimir resumen por meseras";
+btnImprimirMeseras.className = "btn btn-info mt-2";
+btnImprimirMeseras.addEventListener("click", () => imprimirResumenMeseras(pedidosFiltrados));
+listaVentas.appendChild(btnImprimirMeseras);
+
 
 listaVentas.appendChild(btnImprimirPorTipo);
 
