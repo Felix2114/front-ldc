@@ -952,6 +952,7 @@ const pedidoDocRef = await addDoc(collection(db, "pedidos"), {
                 precio: item.precio,
                 subtotal: item.cantidad * item.precio,
                 estado: false,
+                
             });
 
             await actualizarInventarioBebida(item.nombre, item.cantidad);
