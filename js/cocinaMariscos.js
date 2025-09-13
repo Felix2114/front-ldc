@@ -27,35 +27,57 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     
-
- function mostrarPedidosMariscos(pedidos) {
+function mostrarPedidosMariscos(pedidos) {
     const lista = document.getElementById("listaCocina");
     lista.innerHTML = "";
 
+    // Normalizador: minusculas, quitar acentos, quitar caracteres no alfanuméricos, trim
+    const normalizeText = (s) => {
+        if (!s) return "";
+        return s
+            .toString()
+            .toLowerCase()
+            .normalize('NFD')                     // separar acentos
+            .replace(/[\u0300-\u036f]/g, '')     // quitar acentos
+            .replace(/[^a-z0-9\s]/g, '')         // quitar puntuación
+            .trim();
+    };
+
+    // Tu lista original (puedes mantenerla tal cual)
+    const nombresMariscos = [
+      "CALDO DE CAMARON", "ORD TOSTADA CAMARON", "COCTEL BOLA", "MOJARRA ", "ORD TACOS DE PULPO", "ORD TACOS DE CAMARON",
+      "CAMARONES ZARANDEADOS", "ORD TOSTADA JAIBA", "FILETE DE PESCADO", "COCTEL COPA", "COCTEL CHICO", "VUELVE A LA VIDA",
+      "MOJARRAS CHICAS", "ORD. TOSTADA CAZON", "CAMARONES CHILPAYADOS", "JAIBAS ENCHIPOTLADAS", "ENSALADA DE MARISCOS",
+      "MOJARRA PROMOCION", "CALDO DE ROBALO"
+    ];
+
+    // Normaliza la lista una vez (más eficiente)
+    const nombresMariscosNorm = nombresMariscos.map(normalizeText);
+
+    // Normaliza la lista de bebidas (asegúrate que nombresBebidas exista en el scope y provenga del fetch)
+    const nombresBebidasNorm = (typeof nombresBebidas !== "undefined" && Array.isArray(nombresBebidas))
+        ? nombresBebidas.map(normalizeText)
+        : [];
 
     // ✅ Ordenar por fecha (los primeros que se levantaron van primero)
     pedidos.sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
 
-   const nombresMariscos = [
-  "CALDO DE CAMARON", "ORD TOSTADA CAMARON", "COCTEL BOLA", "MOJARRA ", "ORD TACOS DE PULPO", "ORD TACOS DE CAMARON",
-  "CAMARONES ZARANDEADOS", "ORD TOSTADA JAIBA", "FILETE DE PESCADO", "COCTEL COPA", "COCTEL CHICO", "VUELVE A LA VIDA",
-  "MOJARRAS CHICAS", "ORD. TOSTADA CAZON", "CAMARONES CHILPAYADOS", "JAIBAS ENCHIPOTLADAS", "ENSALADA DE MARISCOS",
-  "MOJARRA PROMOCION", "CALDO DE ROBALO"
-];
+    pedidos.forEach(pedido => {
+        // Filtrar productos que sean mariscos (según nombre), no bebidas y pendientes
+        const productosPendientes = pedido.productos.filter(prod => {
+            const nombreNorm = normalizeText(prod.nombre);
 
-pedidos.forEach(pedido => {
-    // Filtrar productos que sean mariscos, no bebidas y pendientes
-    const productosPendientes = pedido.productos.filter(prod => {
-        //console.log("DEBUG producto:", prod); // 👈 revisa qué llega
+            const esMarisco = nombresMariscosNorm.some(m => m && nombreNorm.includes(m));
+            const esBebida = nombresBebidasNorm.includes(nombreNorm);
 
-        const nombreLower = prod.nombre.toLowerCase().trim();
+            // debug opcional (descomenta si quieres ver)
+            // console.log("DEBUG filtro:", { nombre: prod.nombre, nombreNorm, esMarisco, esBebida, estado: prod.estado });
 
-        const esMarisco = nombresMariscos.some(m => nombreLower.includes(m));
+            return esMarisco &&
+                   !esBebida &&
+                   (prod.estado === false || prod.estado === "false" || prod.estado === 0);
+        });
 
-        return esMarisco &&
-               !nombresBebidas.includes(nombreLower) &&
-               (prod.estado === false || prod.estado === "false" || prod.estado === 0);
-    });
         if (productosPendientes.length === 0) return;
 
         const card = document.createElement("div");
@@ -90,7 +112,6 @@ pedidos.forEach(pedido => {
         lista.appendChild(card);
     });
 }
-
 
     // ✅ Carga inicial y actualizaciones en tiempo real
     await cargarDatos();
