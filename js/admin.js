@@ -575,14 +575,38 @@ function imprimirTicket(pedido) {
     `);
 }
 
-
 function imprimirTicketInventario(bebidasGlobal) {
     const fecha = new Date();
     const fechaStr = fecha.toLocaleDateString();
     const horaStr = fecha.toLocaleTimeString();
 
+    // Lista de nombres permitidos
+    const permitidos = [
+        "TEHUACAN TOPO CHICO",
+        "SIDRAL",
+        "REFRESCO PASCUAL",
+        "COCA-COLA",
+        "MODELO ESPECIAL",
+        "CORONA CERO",
+        "MEXICOLA",
+        "TEHUACAN CHICO",
+        "NEGRA MODELO",
+        "BOING",
+        "CERVEZA CUARTITO",
+        "CORONA",
+        "AGUA 600ML",
+        "ULTRA",
+        "AGUA 1LT",
+        "VICTORIA",
+        "BOTELLA TORITO",
+        "PACIFICO"
+    ];
+
+    // Filtrar solo los productos permitidos
+    const filtrados = bebidasGlobal.filter(b => permitidos.includes(b.nombre));
+
     let filas = "";
-    bebidasGlobal.forEach(b => {
+    filtrados.forEach(b => {
         filas += `
             <tr>
                 <td>${b.nombre}</td>
