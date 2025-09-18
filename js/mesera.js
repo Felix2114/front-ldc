@@ -1,6 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
 import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
-import { getDocs, updateDoc, doc, getDoc, increment, runTransaction } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+import { getDocs, updateDoc, doc, getDoc, increment, runTransaction, writeBatch } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyC_gRa6lymckHIrZQwUyQEfnuvT-oAOdwk",
@@ -32,7 +32,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const botonCancelar = document.getElementById("cancelarPedido");
     const contenidoModalPedido = document.getElementById("contenidoModalPedido");//este
     const botonConfirmar = document.getElementById("confirmarPedido");
-    document.getElementById("confirmarPedido").addEventListener("click", mostrarPedido);
+    //document.getElementById("confirmarPedido").addEventListener("click", mostrarPedido);
     
     const mesaEditando = document.getElementById("mesaEditando");
      const inputBusqueda = document.getElementById("buscadorProductos");
@@ -72,21 +72,55 @@ const listasProductos = [
   
 
 // CARGAR LOS PEDIDOS PENDIENTES Y LISTOS
-    try {
-        // GET pedidos con estado pendiente
-        const respPendientes = await fetch(`${apiURL}/pedidos/estado/pendiente`);
-        const pedidosPendientes = await respPendientes.json();
-        cargarOrdenes(pedidosPendientes);
+    // CARGAR DATOS OPTIMIZADO: fetch en paralelo + timeout + render optimizado
+async function cargarDatosOptimizado() {
+  const controller = new AbortController();
+  const timeoutMs = 10000; // 10s (ajusta si quieres)
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
-        // GET pedidos con estado listo
-        const respListos = await fetch(`${apiURL}/pedidos/estado/listo`);
-        const pedidosListos = await respListos.json();
-        cargarHistorialDelDia(pedidosListos);
+  try {
+    // Mostrar loader/skeleton rápido
+    mostrarSkeletonPedidos(); // implementa una UI ligera (ver nota)
 
-        mostrarFechaActual();
-    } catch (error) {
-        console.error("Error al cargar los pedidos:", error);
+    console.time("fetchPedidos");
+    const urls = [
+      `${apiURL}/pedidos/estado/pendiente?limit=200`, // usa limit si tu API lo soporta
+      `${apiURL}/pedidos/estado/listo?limit=200`
+    ];
+
+    // fetch en paralelo
+    const responses = await Promise.all(urls.map(u => fetch(u, { signal: controller.signal })));
+    clearTimeout(timeoutId);
+
+    // validar responses
+    responses.forEach((r, i) => {
+      if (!r.ok) throw new Error(`Error en fetch ${i}: ${r.status} ${r.statusText}`);
+    });
+
+    // parse JSON en paralelo
+    const [pedidosPendientes, pedidosListos] = await Promise.all(responses.map(r => r.json()));
+    console.timeEnd("fetchPedidos");
+
+    // render optimizado en chunks para no bloquear UI
+    await Promise.all([
+      renderPedidosEnChunks(pedidosPendientes, cargarOrdenesOptimizado, document.getElementById('contenedorPendientes')),
+      renderPedidosEnChunks(pedidosListos, cargarHistorialDelDiaOptimizado, document.getElementById('contenedorListos'))
+    ]);
+
+    mostrarFechaActual();
+    console.log("datos cargados");
+    quitarSkeletonPedidos(); // quita loader
+  } catch (error) {
+    clearTimeout(timeoutId);
+    console.error("Error al cargar los pedidos:", error);
+    quitarSkeletonPedidos();
+    // si fue abort por timeout, puedes mostrar mensaje al usuario
+    if (error.name === 'AbortError') {
+      console.warn("Fetch abortado por timeout");
     }
+  }
+}
+
 
 
      inputBusqueda.addEventListener("input", () => {
@@ -1018,30 +1052,54 @@ const pedidoDocRef = await addDoc(collection(db, "pedidos"), {
     
   
 
-    //MOSTRAR PEDIDO EN EL MODAL
-    function mostrarPedido() {
-        let pedidoActual = { items: [] };
+    // función auxiliar para escapar texto (seguridad básica)
+function escapeHtml(str) {
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
 
-    //Limpiar contenido previo antes de actualizar
+function mostrarPedido() {
+    console.time("mostrarPedido");
+
+    // Asegurarnos de usar el pedidoActual global
+    if (!window.pedidoActual || !Array.isArray(window.pedidoActual.items)) {
+        window.pedidoActual = { items: [] };
+    }
+
+    // Limpiar una vez
     contenidoModalPedido.innerHTML = "";
 
-    if (pedidoActual.items.length === 0) {
+    if (window.pedidoActual.items.length === 0) {
         contenidoModalPedido.innerHTML = "<p>No hay productos en el pedido.</p>";
+        const modalPedidoVacio = new bootstrap.Modal(document.getElementById("modalPedido"));
+        modalPedidoVacio.show();
+        console.timeEnd("mostrarPedido");
         return;
     }
 
-    // Generar la lista de productos en el modal
-    pedidoActual.items.forEach(item => {
-        let div = document.createElement("div");
-        div.classList.add("d-flex", "justify-content-between", "border-bottom", "p-2");
-        div.innerHTML = `<span>${item.nombre} x${item.cantidad}</span> <strong>$${item.precio * item.cantidad}</strong>`;
-        contenidoModalPedido.appendChild(div);
-    });
+    // Generar HTML de golpe (mucho más rápido que appendChild dentro del loop)
+    const html = window.pedidoActual.items.map(item => {
+        const nombre = escapeHtml(item.nombre || "");
+        const cantidad = item.cantidad || 0;
+        const subtotal = ((item.precio || 0) * cantidad).toFixed(2);
+        return `<div class="d-flex justify-content-between border-bottom p-2">
+                    <span>${nombre} x${cantidad}</span>
+                    <strong>$${subtotal}</strong>
+                </div>`;
+    }).join("");
 
-    // Mostrar el modal correctamente
+    contenidoModalPedido.innerHTML = html;
+
     const modalPedido = new bootstrap.Modal(document.getElementById("modalPedido"));
     modalPedido.show();
-    }
+
+    console.timeEnd("mostrarPedido");
+}
+
 
     
     //HAY QUE CORREGIR, MARCA ERRO SI LO QUITO
@@ -1061,11 +1119,10 @@ const pedidoDocRef = await addDoc(collection(db, "pedidos"), {
   await Promise.all([
     cargarMenu(),
     cargarMesas(),
-    cargarMenuEditar(),
     cargarOrdenes()
   ]);
 
-  setTimeout(actualizarDatos, 15000); // espera 15s y vuelve a ejecutar
+  setTimeout(actualizarDatos, 15000);   // espera 15s y vuelve a ejecutar
 }
 
 actualizarDatos(); // inicia la primera vez
