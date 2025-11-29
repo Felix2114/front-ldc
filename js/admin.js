@@ -512,6 +512,8 @@ function imprimirTicket(pedido) {
                     .no-facturable { margin-top: 20px; padding: 8px; border: 2px dashed red; color: red; font-weight: bold; font-size: 14px; }
                     .saludo, .oferta { margin-top: 15px; font-size: 12px; }
                     .social { margin-top: 10px; font-size: 12px; }
+                    .atencion { color: black;font-weight: bold;}
+
                 </style>
             </head>
             <body>
@@ -527,8 +529,7 @@ function imprimirTicket(pedido) {
                     <p><strong>Atendió:</strong> ${pedido.mesera}</p>
                     <p><strong>Mesa:</strong> ${pedido.mesaId || "N/A"}</p>
                     <p><strong>Cliente:</strong> ${pedido.cliente || ""}</p>
-                    <p><strong>Fecha:</strong> ${fechaStr}</p>
-                    <p><strong>Hora:</strong> ${horaStr}</p>
+                    <p><strong>Fecha y hora:</strong> ${pedido.fechaCompleta}</p>
                     <p><strong>Envio:</strong> ___________</p>
                 </div>
 
@@ -556,6 +557,8 @@ function imprimirTicket(pedido) {
                 }
 
                 <div class="no-facturable">ESTE TICKET NO ES FACTURABLE</div>
+                <br>
+                <div class="atencion">¿Cómo fue tu atención? (Buena / Mala)<br></div>
                 <div class="saludo">¡Muchas gracias por su visita!</div>
                 <div class="oferta">Camino al barreal s/n, Colonia Santa Teresa<br></div>
                 <div class="social">
