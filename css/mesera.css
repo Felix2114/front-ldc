@@ -1,167 +1,233 @@
-/* Botones de mesa más vistosos */
+/* GENERAL */
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background-color: #f8f9fa;
+    color: #212529;
+}
+
+/* --------------------------------------------------
+   MESAS (Ahora en lista elegante)
+   -------------------------------------------------- */
 .mesa-btn {
-    width: 90px; /* un poco más ancho */
-    height: 55px; /* un poco más alto */
-    font-size: 16px;
-    font-weight: 700;
-    color: #fff;
-    background: linear-gradient(145deg, #8c6d53, #6f4e37); /* degradado cálido tipo restaurante */
-    border: 2px solid #5a3e2b;
-    border-radius: 12px; /* esquinas más redondeadas */
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    box-shadow: 3px 5px 12px rgba(0,0,0,0.25); /* sombra más profunda */
-    transition: transform 0.2s, box-shadow 0.2s, background 0.3s;
-}
-
-.mesa-btn:hover {
-    transform: scale(1.08);
-    box-shadow: 5px 8px 18px rgba(0,0,0,0.35);
-    cursor: pointer;
-    background: linear-gradient(145deg, #a07c5f, #7b5739);
-}
-
-.mesa-btn:active {
-    transform: scale(0.97);
-    box-shadow: 2px 3px 10px rgba(0,0,0,0.2);
-}
-
-/* Estilos para los elementos del menú como tarjetas */
-.list-group-item {
+    width: 100% !important; /* Forza el ancho completo */
+    height: auto !important;
+    padding: 15px 20px;
+    margin-bottom: 0; /* Bootstrap gap maneja el espacio */
+    
+    background: #ffffff;
+    color: #495057;
+    border: 1px solid #dee2e6;
+    border-left: 5px solid #dc3545; /* Indicador rojo a la izquierda */
+    border-radius: 10px;
+    
+    font-size: 1.05rem;
+    font-weight: 600;
+    text-align: left;
+    
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 12px 20px;
-    border-radius: 15px;
-    margin-bottom: 10px;
-    background: #fff7f0;
-    box-shadow: 2px 4px 12px rgba(0,0,0,0.1);
-    transition: transform 0.2s, box-shadow 0.2s;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.03);
+    transition: all 0.2s ease;
 }
 
-.list-group-item:hover {
-    transform: translateY(-2px);
-    box-shadow: 4px 6px 15px rgba(0,0,0,0.15);
+.mesa-btn:active {
+    transform: scale(0.98);
+    background-color: #fef2f2; /* Rojo muy pálido al tocar */
+    border-color: #dc3545;
 }
 
-/* Estilo para el precio */
-.badge {
-    background-color: #d9534f; /* rojo elegante tipo menú */
-    color: #fff;
-    font-size: 14px;
-    padding: 6px 12px;
-    border-radius: 10px;
-    box-shadow: 1px 2px 5px rgba(0,0,0,0.2);
+/* Cuando tu JS detecta mesa ocupada (si aplicas clase) */
+.mesa-btn.ocupada {
+    border-left-color: #6c757d;
+    background-color: #e9ecef;
+    color: #888;
 }
 
-/* Botón para agregar producto */
-.btn-sm.btn-success {
-    background: linear-gradient(135deg, #4e78cb, #29179b);
+/* Botón principal del acordeón */
+button[data-bs-toggle="collapse"] {
+    transition: background-color 0.3s;
+}
+button[data-bs-toggle="collapse"][aria-expanded="true"] {
+    background-color: #fff5f5;
+    border-color: #dc3545;
+}
+/* Rotar flecha */
+button[data-bs-toggle="collapse"][aria-expanded="true"] .badge {
+    transform: rotate(180deg);
+    transition: transform 0.3s;
+}
+
+/* --------------------------------------------------
+   LISTA DE COMIDA (Estilo limpio)
+   -------------------------------------------------- */
+.list-group-item {
     border: none;
-    padding: 6px 12px;
-    font-size: 14px;
-    border-radius: 10px;
-    color: #fff;
-    transition: background 0.3s, transform 0.2s;
+    border-bottom: 1px solid #f0f0f0;
+    padding: 18px 5px;
+    background: transparent;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
-.btn-sm.btn-success:hover {
-    background: linear-gradient(135deg, #29179b, #4e78cb);
-    transform: scale(1.05);
+.list-group-item:last-child {
+    border-bottom: none;
 }
 
-/* Asegura que lista de bebidas se vea correctamente */
-#listaBebidas {
+/* Nombre del producto */
+.list-group-item strong, .list-group-item b {
+    font-size: 1rem;
+    color: #333;
+    font-weight: 600;
     display: block;
+    max-width: 65%;
+    line-height: 1.3;
 }
 
-/* Textarea más elegante */
-textarea {
-    width: 100%;
-    height: 120px;
-    padding: 14px 16px;
+/* Contenedor precio y botón */
+.list-group-item > div { 
+    display: flex;
+    align-items: center;
+}
+
+/* Precio (Grande y rojo) */
+.badge {
+    background-color: transparent !important;
+    color: #dc3545; /* Rojo */
     font-size: 1.1rem;
-    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-    border: 2px solid #d1bfa3;
-    border-radius: 15px;
-    background-color: #fff9f4;
-    resize: vertical;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.08);
-    transition: border-color 0.3s, box-shadow 0.3s;
+    font-weight: 800;
+    padding: 0;
+    margin-right: 15px;
+    box-shadow: none;
 }
 
-textarea:focus {
-    border-color: #a7866d;
-    outline: none;
-    box-shadow: 0 0 8px rgba(167,134,109,0.5);
-}
-
-/* Body y tipografía */
-body {
-    font-size: 1.2rem;
-    font-family: "Segoe UI", Roboto, sans-serif;
-    line-height: 1.6;
-    background-color: #fdf6f1;
-    color: #4b3c2f;
-}
-
-/* Títulos */
-h2, h4, h5 {
-    font-weight: 700;
-    color: #4b3c2f;
-    text-shadow: 0 1px 2px rgba(0,0,0,0.05);
-}
-
-/* Tabs más modernos */
-.nav-tabs .nav-link {
-    font-size: 1.1rem;
-    padding: 10px 18px;
-    border-radius: 12px 12px 0 0;
-    transition: background 0.3s, color 0.3s;
-}
-
-.nav-tabs .nav-link.active {
-    background-color: #a7866d;
-    color: #fff;
+/* Botón Agregar (+) */
+.btn-sm.btn-success {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.3rem;
+    line-height: 0;
+    background: #dc3545;
     border: none;
+    box-shadow: 0 4px 6px rgba(220, 53, 69, 0.25);
+    transition: transform 0.1s;
 }
 
-/* Tarjetas de contenido */
-.card {
-    border: none;
-    border-radius: 20px;
-    background: #fffaf5;
-    box-shadow: 0 6px 25px rgba(0,0,0,0.08);
-    transition: transform 0.2s;
+.btn-sm.btn-success:active {
+    transform: scale(0.9);
+    background: #b02a37;
 }
 
-.card:hover {
-    transform: translateY(-3px);
+/* --------------------------------------------------
+   COMPONENTES VARIOS
+   -------------------------------------------------- */
+/* Tabs con scroll horizontal (tipo Instagram/Apps) */
+.scrolling-wrapper {
+    overflow-x: auto;
+    overflow-y: hidden;
+    white-space: nowrap;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 5px;
+}
+.scrolling-wrapper::-webkit-scrollbar {
+    display: none;
 }
 
-/* Inputs y selects */
-.form-control {
-    font-size: 1.1rem;
+.nav-pills .nav-link {
+    color: #6c757d;
+    font-weight: 600;
+    background: transparent;
+}
+.nav-pills .nav-link.active {
+    background-color: #dc3545;
+    color: white;
+    box-shadow: 0 4px 10px rgba(220, 53, 69, 0.3);
+}
+
+/* Inputs */
+.form-control, .form-select {
+    padding: 12px 15px;
     border-radius: 12px;
-    border: 1px solid #d1bfa3;
-    padding: 10px 14px;
-    transition: border-color 0.3s, box-shadow 0.3s;
+}
+.form-control:focus, .form-select:focus {
+    border-color: #dc3545;
+    box-shadow: 0 0 0 0.25rem rgba(220, 53, 69, 0.1);
 }
 
-.form-control:focus {
-    border-color: #a7866d;
-    box-shadow: 0 0 6px rgba(167,134,109,0.4);
+/* Textarea */
+textarea { resize: none; }
+
+/* --- MEJORA PARA TARJETAS DE ÓRDENES PENDIENTES --- */
+
+/* Contenedor de botones en Pendientes */
+#listaOrdenesPendientes .d-flex {
+    flex-wrap: wrap; /* Permite que los botones bajen si no caben */
+    gap: 8px; /* Espacio uniforme entre botones */
 }
 
-/* Botones primarios */
-.btn-primary {
-    background: linear-gradient(135deg, #6f4e37, #8c6d53);
+/* Ajuste del grupo de botones principales (Editar, Entregada, Finalizar) */
+#listaOrdenesPendientes .d-flex > div:first-child {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    flex: 1 1 auto; /* Toma el espacio necesario */
+}
+
+/* Estilo mejorado para los botones de acción */
+#listaOrdenesPendientes .btn-sm {
+    padding: 10px 14px; /* Más grandes para pantallas táctiles */
+    font-size: 0.85rem;
+    font-weight: 600;
+    border-radius: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: fit-content;
     border: none;
-    transition: background 0.3s, transform 0.2s;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
-.btn-primary:hover {
-    background: linear-gradient(135deg, #54382b, #6f4e37);
-    transform: scale(1.03);
+/* Botón Eliminar (el de la papelera a la derecha) */
+#listaOrdenesPendientes .btn-danger.ms-auto {
+    background-color: #dc3545;
+    margin-left: 0 !important; /* En móvil es mejor que no flote a la derecha si hay poco espacio */
+    width: 100%; /* En móvil ocupa todo el ancho abajo */
+}
+
+/* Estilo específico para los estados (badges) */
+.badge {
+    padding: 8px 12px;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-radius: 6px;
+}
+
+/* Mejoras visuales a la tarjeta de la orden */
+#listaOrdenesPendientes .card {
+    border-radius: 15px;
+    border: 1px solid #eee;
+    background-color: #fff;
+    margin-bottom: 15px !important;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+#listaOrdenesPendientes h5 {
+    font-size: 1.1rem;
+    color: #333;
+    margin-top: 5px;
+}
+
+/* Cuando la pantalla sea más grande (Tablet/PC) acomodamos mejor */
+@media (min-width: 576px) {
+    #listaOrdenesPendientes .btn-danger.ms-auto {
+        width: auto; /* Regresa a su tamaño normal */
+        margin-left: auto !important; /* Flota a la derecha */
+    }
 }
