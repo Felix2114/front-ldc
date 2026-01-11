@@ -1125,18 +1125,28 @@ async function mostrarVentasPorTipo(pedidos) {
 
         // 3. RENDERIZAR STATS (Tarjetas pequeñas)
         if (contenedorStats) {
-            let statsHTML = "";
-            Object.keys(ventasPorTipo).forEach(tipo => {
-                statsHTML += `
-                    <div class="col-md-3">
-                        <div class="stats-card-mini h-100 shadow-sm border-0">
-                            <small class="text-muted fw-bold text-uppercase">${tipo}</small>
-                            <h3 class="text-danger fw-bold my-1">$${ventasPorTipo[tipo].total.toFixed(2)}</h3>
-                            <p class="small text-secondary mb-0">${ventasPorTipo[tipo].cantidad} uds.</p>
-                        </div>
-                    </div>`;
-            });
-            contenedorStats.innerHTML = statsHTML;
+            // Dentro de mostrarVentasPorTipo...
+let statsHTML = "";
+Object.keys(ventasPorTipo).forEach(tipo => {
+    // Convertimos los datos a string para pasarlos a la función de impresión
+    const datosCategoria = JSON.stringify(ventasPorTipo[tipo]);
+    
+    statsHTML += `
+        <div class="col-md-3">
+            <div class="stats-card-mini h-100 shadow-sm border-0 p-3">
+                <small class="text-muted fw-bold text-uppercase">${tipo}</small>
+                <h3 class="text-danger fw-bold my-1">$${ventasPorTipo[tipo].total.toFixed(2)}</h3>
+                <p class="small text-secondary mb-2">${ventasPorTipo[tipo].cantidad} unidades</p>
+                
+                <button class="btn btn-outline-danger btn-sm w-100 rounded-pill fw-bold" 
+                    onclick='imprimirTicketCategoria("${tipo}", ${datosCategoria})'>
+                    🖨️ Imprimir ${tipo}
+                </button>
+            </div>
+        </div>
+    `;
+});
+contenedorStats.innerHTML = statsHTML;
         }
 
         // 4. ACTUALIZAR GRÁFICAS
@@ -1170,6 +1180,66 @@ async function mostrarVentasPorTipo(pedidos) {
         console.error("Error en estadísticas:", error);
     }
 }
+
+// 1. Al final de tu archivo admin.js, agrega la función así:
+window.imprimirTicketCategoria = function(tipo, datos) {
+    const fechaSeleccionada = document.getElementById("fechaVentas").value || "Sin fecha";
+    const ventana = window.open('', '', 'width=400,height=600');
+    
+    // Generamos las filas de la tabla con los productos de esta categoría
+    let productosHTML = "";
+    if (datos.productos) {
+        Object.keys(datos.productos).forEach(nombreProd => {
+            productosHTML += `
+                <tr>
+                    <td style="text-align: left; padding: 5px;">${nombreProd}</td>
+                    <td style="text-align: center; padding: 5px;">${datos.productos[nombreProd]}</td>
+                </tr>
+            `;
+        });
+    }
+
+    ventana.document.write(`
+        <html>
+            <head>
+                <title>Corte - ${tipo}</title>
+                <style>
+                    body { font-family: monospace; padding: 20px; text-align: center; }
+                    .logo { width: 80px; filter: grayscale(1); }
+                    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+                    th, td { border-bottom: 1px dashed #000; }
+                    .resumen { text-align: left; margin-top: 15px; font-size: 14px; }
+                </style>
+            </head>
+            <body>
+                <img src="https://felix2114.github.io/front-ldc/images/LosDosCar.jpeg" class="logo">
+                <h2 style="margin:5px 0;">LOS DOS CARNALES</h2>
+                <h3>CORTE: ${tipo.toUpperCase()}</h3>
+                <p>Fecha: ${fechaSeleccionada}</p>
+                <hr>
+                <table>
+                    <thead>
+                        <tr><th style="text-align: left;">Producto</th><th>Cant</th></tr>
+                    </thead>
+                    <tbody>${productosHTML}</tbody>
+                </table>
+                <div class="resumen">
+                    <p><strong>Total Unidades:</strong> ${datos.cantidad}</p>
+                    <p><strong>Venta Total:</strong> $${datos.total.toFixed(2)}</p>
+                </div>
+                <p style="margin-top:20px;">#somosLosDosCarnales👬</p>
+                <script>
+                    window.onload = function() {
+                        window.print();
+                        setTimeout(() => window.close(), 500);
+                    }
+                </script>
+            </body>
+        </html>
+    `);
+};
+
+
 /**
  * Función de Impresión Tamaño Carta (PDF)
  */
