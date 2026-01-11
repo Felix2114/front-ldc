@@ -227,63 +227,27 @@ body, html { height: 100%; overflow: hidden; }
 
 /* HOVER EFECTO LIMPIO (Letras Blancas como pediste) */
 .pedido-card:hover, .stats-card:hover {
-    background-color: #2d3436 !important;
+    background-color: #ffffff !important; /* Mantiene el fondo blanco */
     transform: translateY(-8px);
     box-shadow: 0 15px 30px rgba(0,0,0,0.15) !important;
 }
 
+/* Eliminamos el cambio de color de letras a blanco en el hover */
 .pedido-card:hover *, .stats-card:hover * {
-    color: #ffffff !important;
+    color: inherit; /* Mantiene sus colores originales (rojo, gris, negro) */
 }
 
-/* Botón Imprimir Ticket más pro */
-.pedido-card .btn-primary {
-    background-color: #0d6efd;
-    border: none;
-    padding: 10px;
-    font-weight: 600;
-    border-radius: 10px;
-    margin-top: 15px;
-}
-
-/* Ajustes de scroll suave */
-#content {
-    scroll-behavior: smooth;
-}
-
-/* Contenedor tipo Grid para los pedidos */
-.grid-pedidos {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 20px;
-}
-
-/* Ajuste para las estadísticas por categoría para que no se vean verticales */
-#contenedorStatsCategorias {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 15px;
-    padding-top: 20px;
-}
-
-.stats-card-mini {
-    flex: 1;
-    min-width: 150px;
-    background: white;
-    padding: 20px;
-    border-radius: 15px;
-    text-align: center;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-    border-bottom: 4px solid #dc3545;
-}
-
-/* Estilo para que el hover sea igual en todo el panel */
+/* Estilo para que el hover sea igual en las mini estadísticas también */
 .stats-card-mini:hover {
-    background-color: #343a40 !important;
+    background-color: #ffffff !important; /* Mantiene el fondo blanco */
     transform: translateY(-5px);
     transition: 0.3s;
 }
-.stats-card-mini:hover * { color: white !important; }
+
+.stats-card-mini:hover * { 
+    color: inherit !important; 
+}
+.stats-card-mini:hover * { color: rgb(174, 100, 100) !important; }
 
 /* Contenedor que permite filas automáticas */
 .grid-pedidos {
