@@ -1,208 +1,326 @@
-/* ====================== */
-/* Tarjetas de pedidos */
-/* ====================== */
+/* RESET Y ESTRUCTURA DASHBOARD */
+body, html { height: 100%; overflow: hidden; }
+#wrapper { height: 100vh; width: 100vw; display: flex; }
+
+/* SIDEBAR FIJO */
+#sidebar {
+    width: 280px;
+    min-width: 280px;
+    height: 100vh;
+    z-index: 1000;
+    background-color: #212529 !important;
+}
+
+/* CONTENIDO CON SCROLL PROPIO */
+#content {
+    background-color: #f8f9fa;
+}
+
+/* CLASES ORIGINALES RECONSTRUIDAS PARA TU JS */
 .pedido-card {
-    background-color: #ffffff;
+    background: white;
     border: 1px solid #dee2e6;
     border-radius: 12px;
-    padding: 18px;
+    padding: 20px;
     margin-bottom: 20px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    box-shadow: 0 5px 15px rgba(241, 237, 237, 0.912);
 }
 
-.pedido-card:hover {
-    transform: translateY(-3px) scale(1.01);
-    box-shadow: 0 8px 20px rgba(0,0,0,0.12);
-}
-
-.pedido-card h5 {
-    margin-top: 0;
-    color: #198754; /* verde Bootstrap */
-    font-weight: bold;
-}
-
-.pedido-card ul {
-    padding-left: 20px;
-    margin: 10px 0;
-}
-
-.pedido-card li {
-    margin-bottom: 5px;
-}
-
-/* ====================== */
-/* Recuadro de descuentos */
-/* ====================== */
 .descuentos-box {
-    border: 1px solid #0d6efd;
-    border-radius: 12px;
-    padding: 18px;
-    margin-bottom: 25px;
-    background: linear-gradient(135deg, #e7f1ff, #f0f8ff);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-}
-
-.descuentos-box h5 {
-    color: #0d6efd;
-    font-weight: bold;
-    margin-bottom: 12px;
-    font-size: 1.2rem;
+    border: 2px solid #0d6efd;
+    border-radius: 15px;
+    padding: 20px;
+    background-color: #e7f1ff;
 }
 
 .descuentos-item {
     display: flex;
     justify-content: space-between;
-    padding: 6px 10px;
-    background-color: #ffffff;
+    font-size: 0.85rem;
+}
+
+/* MENU TABLAS */
+.table { background: white; border-radius: 10px; overflow: hidden; }
+.table td { padding: 12px 15px; border-bottom: 1px solid #f1f1f1; }
+
+/* SIDEBAR ITEMS */
+.list-group-item {
+    transition: all 0.3s;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 0.95rem;
+}
+
+.list-group-item.active {
+    background-color: #dc3545 !important;
+    border-color: #dc3545 !important;
+    padding-left: 30px; /* Efecto de desplazamiento al estar activo */
+}
+
+.list-group-item:hover:not(.active) {
+    background-color: #3a191ef0 !important;
+    color: #ece9ea !important;
+}
+
+/* PESTAÑAS DEL MENÚ (PILLS) */
+.nav-pills .nav-link {
+    color: #555;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+.nav-pills .nav-link.active {
+    background-color: #dc3545;
+    box-shadow: 0 4px 10px rgba(220, 53, 69, 0.2);
+}
+
+/* RESPONSIVE */
+@media (max-width: 992px) {
+    #sidebar { display: none; } /* En tablets/celulares podrías usar un botón de menú si gustas */
+}
+
+
+
+/* CONTENEDOR DE LA LISTA DE VENTAS */
+#listaVentas {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); /* Crea columnas automáticas */
+    gap: 15px;
+    padding: 0;
+    list-style: none;
+    align-items: start;
+}
+
+/* CADA TARJETA DE PEDIDO (li.list-group-item) */
+#listaVentas .list-group-item {
+    background: #ffffff;
+    border: none;
+    border-radius: 15px;
+    padding: 15px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    border-top: 4px solid #dc3545; /* Línea roja superior */
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.2s;
+    height: 100%;
+}
+
+#listaVentas .list-group-item:hover {
+    transform: translateY(-5px);
+}
+
+/* TEXTOS DENTRO DE LA VENTA */
+#listaVentas .list-group-item strong:first-of-type {
+    display: block;
+    color: #dc3545;
+    margin-bottom: 10px;
+    border-bottom: 1px dashed #eee;
+    padding-bottom: 5px;
+}
+
+#listaVentas .list-group-item br {
+    display: none; /* Quitamos los saltos de línea para controlar el espacio con margen */
+}
+
+/* Formateamos la info para que se vea compacta */
+#listaVentas .list-group-item strong {
+    font-size: 0.85rem;
+    color: #666;
+}
+
+#listaVentas .list-group-item {
+    font-size: 0.9rem;
+    line-height: 1.6;
+}
+
+/* AJUSTE DE LOS BOTONES Y SELECTS DENTRO DE LA TARJETA */
+#listaVentas .form-select-sm {
     border-radius: 8px;
-    margin-bottom: 6px;
-    font-weight: 500;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.04);
-    transition: background 0.2s ease;
+    background-color: #f8f9fa;
+    margin-bottom: 10px;
 }
 
-.descuentos-item:hover {
-    background-color: #f0f8ff;
-}
-
-/* ====================== */
-/* Botones mejorados */
-/* ====================== */
-.btn-sm {
-    padding: 0.35rem 0.75rem;
-    font-size: 0.875rem;
+#listaVentas .btn-primary {
+    width: 100%;
+    margin-left: 0 !important;
     border-radius: 8px;
-    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    margin-top: auto; /* Empuja el botón al final de la tarjeta */
 }
 
-.btn-sm:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-}
-
-/* ====================== */
-/* Tablas modernas */
-/* ====================== */
-table {
-    border-radius: 10px;
-    overflow: hidden;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-}
-
-table thead {
-    background-color: #0d6efd;
-    color: #fff;
-}
-
-table th, table td {
-    vertical-align: middle !important;
-    text-align: center;
-}
-
-/* ====================== */
-/* Inputs de fecha y número */
-/* ====================== */
-input[type="date"], input[type="number"] {
-    border-radius: 8px;
-    border: 1px solid #ced4da;
-    padding: 6px 12px;
-    box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);
-}
-
-/* ====================== */
-/* Contenedores y cards generales */
-/* ====================== */
-.card {
+/* RECUADRO DE TOTALES (El que se crea al final) */
+/* Tu JS añade los totales al final de la lista, vamos a hacer que ocupen todo el ancho */
+#listaVentas div.mt-3 {
+    grid-column: 1 / -1; /* Ocupa todas las columnas */
+    background: #2d3436;
+    color: white;
+    padding: 20px;
     border-radius: 12px;
-    box-shadow: 0 6px 15px rgba(0,0,0,0.06);
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-top: 20px;
 }
 
-.card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+/* BOTONES DE IMPRESIÓN GENERAL (Resumen, Meseras, etc) */
+#listaVentas .btn-success, 
+#listaVentas .btn-warning, 
+#listaVentas .btn-info {
+    grid-column: auto; /* Que se acomoden solos */
+    border-radius: 50px;
+    font-weight: bold;
+    padding: 10px 20px;
+    font-size: 0.9rem;
 }
 
-/* ====================== */
-/* Títulos más elegantes */
-/* ====================== */
-h4, h5 {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+/* En PC se verán 3 o 4 por fila, en Celular 1 por fila */
+@media (max-width: 600px) {
+    #listaVentas {
+        grid-template-columns: 1fr;
+    }
 }
 
-/* ====================== */
-/* Espaciados y margenes generales */
-/* ====================== */
-.mt-3, .mt-4, .mt-5 {
-    margin-top: 1.5rem !important;
+/* ESTRUCTURA DASHBOARD MEJORADA */
+.sticky-stats {
+    position: sticky;
+    top: 70px; /* Debajo del header principal */
+    z-index: 900;
+    border-bottom: 1px solid #eee;
 }
 
-.mb-3, .mb-4 {
-    margin-bottom: 1.5rem !important;
+.stat-main-card {
+    background: linear-gradient(135deg, #dc3545 0%, #a71d2a 100%);
+    box-shadow: 0 10px 20px rgba(220, 53, 69, 0.2) !important;
 }
 
-/* ====================== */
-/* Contenedor de mesas */
-/* ====================== */
-#contenedorMesas {
+/* TARJETAS DE CATEGORÍA (Horizontal y Limpio) */
+.stats-card {
+    border: 1px solid rgba(0,0,0,0.05) !important;
+    padding: 12px !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.stats-card small {
+    font-size: 0.65rem;
+    letter-spacing: 1px;
+    color: #888;
+}
+
+.stats-card h4 {
+    font-size: 1.2rem;
+    margin: 4px 0 !important;
+}
+
+/* GRID DE PEDIDOS MODERNO */
+#listaVentas {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+}
+
+.pedido-card {
+    border: none !important;
+    background: #ffffff;
+    border-radius: 16px !important;
+    padding: 20px !important;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05) !important;
+    border-left: 5px solid #dc3545 !important; /* Detalle elegante al lado */
+}
+
+/* HOVER EFECTO LIMPIO (Letras Blancas como pediste) */
+.pedido-card:hover, .stats-card:hover {
+    background-color: #2d3436 !important;
+    transform: translateY(-8px);
+    box-shadow: 0 15px 30px rgba(0,0,0,0.15) !important;
+}
+
+.pedido-card:hover *, .stats-card:hover * {
+    color: #ffffff !important;
+}
+
+/* Botón Imprimir Ticket más pro */
+.pedido-card .btn-primary {
+    background-color: #0d6efd;
+    border: none;
+    padding: 10px;
+    font-weight: 600;
+    border-radius: 10px;
+    margin-top: 15px;
+}
+
+/* Ajustes de scroll suave */
+#content {
+    scroll-behavior: smooth;
+}
+
+/* Contenedor tipo Grid para los pedidos */
+.grid-pedidos {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+}
+
+/* Ajuste para las estadísticas por categoría para que no se vean verticales */
+#contenedorStatsCategorias {
     display: flex;
     flex-wrap: wrap;
-    gap: 12px;
+    gap: 15px;
+    padding-top: 20px;
+}
+
+.stats-card-mini {
+    flex: 1;
+    min-width: 150px;
+    background: white;
+    padding: 20px;
+    border-radius: 15px;
+    text-align: center;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    border-bottom: 4px solid #dc3545;
+}
+
+/* Estilo para que el hover sea igual en todo el panel */
+.stats-card-mini:hover {
+    background-color: #343a40 !important;
+    transform: translateY(-5px);
+    transition: 0.3s;
+}
+.stats-card-mini:hover * { color: white !important; }
+
+/* Contenedor que permite filas automáticas */
+.grid-pedidos {
+    display: grid;
+    /* Esto crea columnas de mínimo 300px. Si hay espacio, mete más. Si no, baja. */
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+    padding: 10px 0;
+}
+
+/* Ajuste para que las tarjetas de pedidos no se estiren feo */
+.pedido-card {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: 180px;
+    height: 100%;
 }
 
 
-.titulo-principal {
-    font-family: 'Montserrat', sans-serif;
-    font-size: 3rem;
-    background: linear-gradient(90deg, #0d6efd, #d81212, #ffc107);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    font-weight: 700;
-    margin-bottom: 0.5rem;
-    text-shadow: 2px 2px 5px rgba(0,0,0,0.1);
-}
-
-.subtitulo-principal {
-    font-family: 'Montserrat', sans-serif;
-    font-size: 1.8rem;
-    color: #343a40;
-    font-weight: 600;
+/* Asegura que el grid de pedidos sea independiente */
+.grid-pedidos {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1.5rem;
+    align-items: start; /* Evita que las tarjetas se estiren hacia abajo */
     margin-bottom: 2rem;
+}
+
+/* Controla el tamaño máximo de las gráficas para que no crezcan infinitamente */
+#chartCategorias, #chartProductosTop {
+    max-height: 300px !important;
+    width: 100% !important;
+}
+
+#sidebar .sidebar-header h4 {
+    color: #ede4e6 !important; /* Cambia este código por el color que desees */
+    font-family: 'Montserrat', sans-serif; /* Asegura que use tu fuente principal */
     letter-spacing: 1px;
-}
-
-
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(-20px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes gradientMove {
-    0% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
-}
-
-.titulo-principal {
-    font-family: 'Montserrat', sans-serif;
-    font-size: 3rem;
-    font-weight: 700;
-    background: linear-gradient(90deg, #0d6efd, #198754, #ffc107, #dc3545);
-    background-size: 300% 300%;
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    animation: fadeIn 1s ease-out, gradientMove 5s ease infinite;
-    text-shadow: 2px 2px 5px rgba(0,0,0,0.1);
-    margin-bottom: 0.5rem;
-}
-
-.subtitulo-principal {
-    font-family: 'Montserrat', sans-serif;
-    font-size: 1.8rem;
-    color: #343a40;
-    font-weight: 600;
-    margin-bottom: 2rem;
-    letter-spacing: 1px;
-    animation: fadeIn 1s ease-out;
 }

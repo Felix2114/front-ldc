@@ -301,6 +301,7 @@ lista.onclick = async (e) => {
             mostrarInventario(inventario);
             mostrarMesas(mesas);
            mostrarVentas(pedidosListos);
+           
 
         } catch (error) {
             console.error("Error al cargar datos:", error);
@@ -881,6 +882,8 @@ function imprimirResumenMeseras(pedidos) {
 }
 
 
+// --- FUNCIONES DE VENTAS Y ESTADÍSTICAS ---
+
 async function mostrarVentas() {
     const fechaSeleccionada = document.getElementById("fechaVentas").value;
     const listaVentas = document.getElementById("listaVentas");
@@ -892,12 +895,11 @@ async function mostrarVentas() {
     if (!fechaSeleccionada) return;
 
     try {
-        // Llamar a tu nuevo endpoint
+        const apiPedidos = "https://api-ldc.onrender.com/pedidos";
         const res = await fetch(`${apiPedidos}/guardados/${fechaSeleccionada}`);
         if (!res.ok) throw new Error("Error al obtener pedidos guardados");
         const pedidosFiltrados = await res.json();
 
-        // Ordenar por folio
         pedidosFiltrados.sort((a, b) => a.folio - b.folio);
 
         let total = 0;
@@ -905,22 +907,34 @@ async function mostrarVentas() {
         let totalTarjeta = 0;
         let totalPendientes = 0;
 
+        // Contenedor para la cuadrícula de ventas
+        const gridVentas = document.createElement("div");
+        gridVentas.id = "gridVentasCards"; // Referencia para el CSS
+        listaVentas.appendChild(gridVentas);
+
         pedidosFiltrados.forEach((pedido, index) => {
             const numeroPedido = index + 1;
-            const fechaFormateada = pedido.fecha; 
-
             total += pedido.total;
 
             if (pedido.metodo_Pago === "Efectivo") totalEfectivo += pedido.total;
             else if (pedido.metodo_Pago === "Tarjeta") totalTarjeta += pedido.total;
             else totalPendientes += pedido.total;
 
-            const li = document.createElement("li");
-            li.classList.add("list-group-item");
+            const card = document.createElement("div");
+            card.classList.add("pedido-card"); // Usamos tu clase original
 
-            // Crear select para método de pago
+            card.innerHTML = `
+                <strong>Pedido #${numeroPedido}</strong>
+                <span><b>Folio:</b> ${pedido.folio}</span>
+                <span><b>Mesera:</b> ${pedido.mesera}</span>
+                <span><b>Cliente:</b> ${pedido.cliente}</span>
+                <span class="text-danger fw-bold">Total: $${pedido.total.toFixed(2)}</span>
+                <small class="text-muted">${pedido.fecha}</small>
+                <hr>
+            `;
+
             const selectMetodo = document.createElement("select");
-            selectMetodo.className = "form-select form-select-sm mt-1";
+            selectMetodo.className = "form-select form-select-sm mb-2";
             selectMetodo.innerHTML = `
                 <option value="Efectivo" ${pedido.metodo_Pago === "Efectivo" ? "selected" : ""}>Efectivo</option>
                 <option value="Tarjeta" ${pedido.metodo_Pago === "Tarjeta" ? "selected" : ""}>Tarjeta</option>
@@ -932,96 +946,126 @@ async function mostrarVentas() {
                 try {
                     const pedidoRef = doc(db, "pedidos", pedido.id);
                     await updateDoc(pedidoRef, { metodo_Pago: nuevoMetodo });
-                    pedido.metodo_Pago = nuevoMetodo;
                     alert("Método de pago actualizado ✅");
-                    mostrarVentas(); // Recarga la lista actualizada
+                    mostrarVentas(); 
                 } catch (error) {
-                    console.error("Error al actualizar el método de pago:", error);
-                    alert("❌ No se pudo actualizar el método de pago.");
+                    alert("❌ Error al actualizar");
                 }
             });
 
-            li.innerHTML = `
-                <strong style="font-size: 20px;">Pedido #${numeroPedido}</strong><br>
-                <strong>Folio:</strong> ${pedido.folio}<br>
-                <strong>Mesera:</strong> ${pedido.mesera}<br>
-                <strong>Cliente:</strong> ${pedido.cliente}<br>
-                <strong>Total:</strong> $${pedido.total.toFixed(2)}<br>
-                <strong>Fecha:</strong> ${fechaFormateada}<br>
-                <strong>Método de Pago:</strong>
-            `;
-
-            li.appendChild(selectMetodo);
-
             const btnImprimir = document.createElement("button");
             btnImprimir.textContent = "Imprimir ticket";
-            btnImprimir.className = "btn btn-primary btn-sm ms-2";
+            btnImprimir.className = "btn btn-primary btn-sm w-100";
             btnImprimir.addEventListener("click", () => imprimirTicket(pedido));
 
-            li.appendChild(btnImprimir);
-            listaVentas.appendChild(li);
+            card.appendChild(selectMetodo);
+            card.appendChild(btnImprimir);
+            gridVentas.appendChild(card);
         });
 
         totalVentas.textContent = total.toFixed(2);
 
-        const resumenTotales = document.createElement("div");
-        resumenTotales.className = "mt-3";
-        resumenTotales.innerHTML = `
-            <strong>Total Efectivo:</strong> $${totalEfectivo.toFixed(2)}<br>
-            <strong>Total Tarjeta:</strong> $${totalTarjeta.toFixed(2)}<br>
-            <strong>Total Pendientes:</strong> $${totalPendientes.toFixed(2)}
-        `;
+        // --- SECCIÓN DE ESTADÍSTICAS Y RECOMENDACIONES ---
+        await mostrarVentasPorTipo(pedidosFiltrados);
 
-        listaVentas.appendChild(resumenTotales);
+        // Botones de impresión al final
+        const divBotones = document.createElement("div");
+        divBotones.className = "d-flex flex-wrap gap-2 mt-4 justify-content-center";
+        
+        const btnResumen = document.createElement("button");
+        btnResumen.className = "btn btn-success rounded-pill";
+        btnResumen.innerHTML = "🖨️ Resumen Diario";
+        btnResumen.onclick = () => imprimirResumenVentas(pedidosFiltrados);
 
-        const btnImprimirResumen = document.createElement("button");
-        btnImprimirResumen.textContent = "🖨️ Imprimir resumen";
-        btnImprimirResumen.className = "btn btn-success mt-3";
-        btnImprimirResumen.addEventListener("click", () => imprimirResumenVentas(pedidosFiltrados));
+        const btnMeseras = document.createElement("button");
+        btnMeseras.className = "btn btn-info rounded-pill text-white";
+        btnMeseras.innerHTML = "🖨️ Resumen Meseras";
+        btnMeseras.onclick = () => imprimirResumenMeseras(pedidosFiltrados);
 
-        listaVentas.appendChild(btnImprimirResumen);
-
-        const btnImprimirPorTipo = document.createElement("button");
-btnImprimirPorTipo.textContent = "🖨️ Imprimir ventas por tipo";
-btnImprimirPorTipo.className = "btn btn-warning mt-2";
-btnImprimirPorTipo.addEventListener("click", () => imprimirVentasPorTipo(pedidosFiltrados));
-
-
-const btnImprimirMeseras = document.createElement("button");
-btnImprimirMeseras.textContent = "🖨️ Imprimir resumen por meseras";
-btnImprimirMeseras.className = "btn btn-info mt-2";
-btnImprimirMeseras.addEventListener("click", () => imprimirResumenMeseras(pedidosFiltrados));
-listaVentas.appendChild(btnImprimirMeseras);
-
-
-listaVentas.appendChild(btnImprimirPorTipo);
+        divBotones.append(btnResumen, btnMeseras);
+        listaVentas.appendChild(divBotones);
 
     } catch (error) {
-        console.error("Error al mostrar ventas:", error);
-        alert("❌ No se pudieron cargar las ventas.");
+        console.error("Error:", error);
     }
 }
-async function imprimirVentasPorTipo(pedidos) {
-    try {
-        const fechaSeleccionada = document.getElementById("fechaVentas").value;
+// --- FUNCIÓN 1: Gráfica Circular (Categorías) ---
+function renderizarGraficaCategorias(datos) {
+    const canvas = document.getElementById('chartCategorias');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
 
-        if (!fechaSeleccionada) {
-            alert("Selecciona una fecha para imprimir el resumen.");
-            return;
-        }
+    if (window.miGraficaCategorias instanceof Chart) window.miGraficaCategorias.destroy();
 
-        // 🔹 Filtrar pedidos por fecha y estado
-        const pedidosFiltrados = pedidos.filter(pedido => {
-            if (pedido.estado !== "listo") return false;
-            return pedido.fecha === fechaSeleccionada;
+    const etiquetas = Object.keys(datos);
+    const valores = etiquetas.map(cat => datos[cat].total);
+
+    window.miGraficaCategorias = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: etiquetas,
+            datasets: [{
+                data: valores,
+                backgroundColor: ['#dc3545', '#2d3436', '#ffc107', '#198754', '#0dcaf0', '#6f42c1'],
+            }]
+        },
+        options: { responsive: true, maintainAspectRatio: false }
+    });
+}
+
+// --- FUNCIÓN 2: Gráfica de Barras (Top Productos) ---
+function renderizarGraficaTopProductos(datos) {
+    const canvas = document.getElementById('chartProductosTop');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+
+    if (window.miGraficaProductos instanceof Chart) window.miGraficaProductos.destroy();
+
+    // Extraer todos los productos de todas las categorías y ordenarlos
+    let productosArray = [];
+    Object.keys(datos).forEach(tipo => {
+        Object.keys(datos[tipo].productos).forEach(nombre => {
+            productosArray.push({ nombre, cantidad: datos[tipo].productos[nombre] });
         });
+    });
 
-        if (pedidosFiltrados.length === 0) {
-            alert("No hay ventas para la fecha seleccionada.");
-            return;
+    productosArray.sort((a, b) => b.cantidad - a.cantidad);
+    const top5 = productosArray.slice(0, 5); // Tomar solo los 5 más vendidos
+
+    window.miGraficaProductos = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: top5.map(p => p.nombre),
+            datasets: [{
+                label: 'Unidades Vendidas',
+                data: top5.map(p => p.cantidad),
+                backgroundColor: '#2d3436',
+                borderRadius: 8
+            }]
+        },
+        options: {
+            indexAxis: 'y', // Barras horizontales
+            responsive: true,
+            plugins: { legend: { display: false } }
         }
+    });
+}
 
-        // 🔹 Traer menú para saber el tipo de cada producto
+/**
+ * Muestra las ventas por tipo, genera gráficas y prepara el resumen imprimible.
+ */
+async function mostrarVentasPorTipo(pedidos) {
+    const listaVentas = document.getElementById("listaVentas");
+    const contenedorStats = document.getElementById("contenedorStatsCategorias");
+    const fechaSeleccionada = document.getElementById("fechaVentas").value;
+
+    // 1. LIMPIEZA INICIAL: Borramos pedidos y el resumen viejo para que no se acumule
+    if (!listaVentas) return;
+    listaVentas.innerHTML = "";
+    const resumenViejo = document.getElementById("resumen-final-ventas");
+    if (resumenViejo) resumenViejo.remove();
+
+    try {
         const menuSnapshot = await getDocs(collection(db, "menu"));
         const menuMap = {};
         menuSnapshot.forEach(doc => {
@@ -1029,100 +1073,177 @@ async function imprimirVentasPorTipo(pedidos) {
             menuMap[data.nombre] = data.tipo; 
         });
 
-        // 🔹 Agrupar ventas por tipo y acumular subtotal
         const ventasPorTipo = {};
+        let productoMasVendido = { nombre: "Ninguno", cantidad: 0 };
 
-        pedidosFiltrados.forEach(pedido => {
-            if (!pedido.productos) return;
-            pedido.productos.forEach(item => {
-                const nombre = item.nombre;
-                const cantidad = item.cantidad || 1;
-                const precio = item.precio || 0;
-                const subtotal = cantidad * precio;
-                const tipo = menuMap[nombre] || "Desconocido";
+        // 2. RENDERIZAR PEDIDOS
+        pedidos.forEach(pedido => {
+            const cardPedido = document.createElement("div");
+            cardPedido.className = "pedido-card shadow-sm";
+            
+            let itemsHTML = "";
+            if (pedido.productos) {
+                pedido.productos.forEach(item => {
+                    itemsHTML += `
+                    <div class="small d-flex justify-content-between">
+                        <span>${item.cantidad}x ${item.nombre}</span>
+                        <span class="text-muted">$${(item.cantidad * item.precio).toFixed(2)}</span>
+                    </div>`;
 
-                if (!ventasPorTipo[tipo]) ventasPorTipo[tipo] = { productos: {}, totalTipo: 0 };
-                if (!ventasPorTipo[tipo].productos[nombre]) ventasPorTipo[tipo].productos[nombre] = { cantidad: 0, precio: precio, subtotal: 0 };
+                    const tipo = menuMap[item.nombre] || "Cerveza";
+                    const subtotal = item.cantidad * item.precio;
 
-                ventasPorTipo[tipo].productos[nombre].cantidad += cantidad;
-                ventasPorTipo[tipo].productos[nombre].subtotal += subtotal;
-                ventasPorTipo[tipo].totalTipo += subtotal;
-            });
+                    if (!ventasPorTipo[tipo]) ventasPorTipo[tipo] = { total: 0, cantidad: 0, productos: {} };
+                    ventasPorTipo[tipo].total += subtotal;
+                    ventasPorTipo[tipo].cantidad += item.cantidad;
+
+                    if (!ventasPorTipo[tipo].productos[item.nombre]) ventasPorTipo[tipo].productos[item.nombre] = 0;
+                    ventasPorTipo[tipo].productos[item.nombre] += item.cantidad;
+                    
+                    if (ventasPorTipo[tipo].productos[item.nombre] > productoMasVendido.cantidad) {
+                        productoMasVendido = { nombre: item.nombre, cantidad: ventasPorTipo[tipo].productos[item.nombre] };
+                    }
+                });
+            }
+
+            cardPedido.innerHTML = `
+                <div class="d-flex justify-content-between border-bottom pb-2 mb-2">
+                    <span class="fw-bold text-danger">Mesa ${pedido.mesa || 'S/M'}</span>
+                    <span class="badge bg-light text-dark border">${pedido.hora || '--:--'}</span>
+                </div>
+                <h6 class="fw-bold text-uppercase small mb-2">${pedido.cliente || 'Cliente'}</h6>
+                <div class="productos-scroll mb-3" style="max-height: 100px; overflow-y: auto;">
+                    ${itemsHTML}
+                </div>
+                <div class="d-flex justify-content-between align-items-center mt-auto pt-2 border-top">
+                    <span class="fw-bold">TOTAL:</span>
+                    <span class="fw-bold text-success fs-5">$${pedido.total?.toFixed(2) || '0.00'}</span>
+                </div>
+            `;
+            listaVentas.appendChild(cardPedido);
         });
 
-        // 🔹 Generar tabla HTML ordenada por tipo y nombre
-        let tablaHTML = "";
-        Object.keys(ventasPorTipo)
-            .sort()
-            .forEach(tipo => {
-                tablaHTML += `<h4 style="margin-top:10px;">${tipo.toUpperCase()}</h4>`;
-                tablaHTML += `<table><thead><tr><th>Producto</th><th>Precio</th><th>Cant.</th><th>Subtotal</th></tr></thead><tbody>`;
-                
-                Object.keys(ventasPorTipo[tipo].productos)
-                    .sort()
-                    .forEach(nombre => {
-                        const prod = ventasPorTipo[tipo].productos[nombre];
-                        tablaHTML += `<tr>
-                            <td>${nombre}</td>
-                            <td>$${prod.precio.toFixed(2)}</td>
-                            <td>${prod.cantidad}</td>
-                            <td>$${prod.subtotal.toFixed(2)}</td>
-                        </tr>`;
-                    });
-
-                // Total por tipo
-                tablaHTML += `<tr>
-                    <td colspan="3" style="text-align:right; font-weight:bold;">TOTAL ${tipo}:</td>
-                    <td style="font-weight:bold;">$${ventasPorTipo[tipo].totalTipo.toFixed(2)}</td>
-                </tr>`;
-
-                tablaHTML += `</tbody></table>`;
+        // 3. RENDERIZAR STATS (Tarjetas pequeñas)
+        if (contenedorStats) {
+            let statsHTML = "";
+            Object.keys(ventasPorTipo).forEach(tipo => {
+                statsHTML += `
+                    <div class="col-md-3">
+                        <div class="stats-card-mini h-100 shadow-sm border-0">
+                            <small class="text-muted fw-bold text-uppercase">${tipo}</small>
+                            <h3 class="text-danger fw-bold my-1">$${ventasPorTipo[tipo].total.toFixed(2)}</h3>
+                            <p class="small text-secondary mb-0">${ventasPorTipo[tipo].cantidad} uds.</p>
+                        </div>
+                    </div>`;
             });
+            contenedorStats.innerHTML = statsHTML;
+        }
 
-        // 🔹 Imprimir ticket
-        const ventana = window.open('', '', 'width=400,height=600');
-        ventana.document.write(`
-            <html>
-                <head>
-                    <title>Ventas por Tipo</title>
-                    <style>
-                        body { font-family: monospace; padding: 10px; margin: 0; text-align: center; }
-                        img.logo { width: 100px; margin-bottom: 10px; }
-                        h2 { margin: 0; }
-                        table { width: 100%; border-collapse: collapse; margin: 5px 0; }
-                        th, td { border-bottom: 1px dashed #000; padding: 4px; text-align: center; }
-                        h4 { margin: 8px 0 4px 0; font-size: 14px; text-decoration: underline; }
-                        .saludo { margin-top: 15px; font-size: 12px; }
-                    </style>
-                </head>
-                <body>
-                    <img src="https://felix2114.github.io/front-ldc/images/LosDosCar.jpeg" class="logo" alt="Logo"><br>
-                    <div style="margin-top: 10px; margin-bottom: 10px;">
-                        <h1 style="margin: 0; font-size: 20px; letter-spacing: 1px; font-weight: bold;">LOS DOS CARNALES</h1>
-                        <p style="margin: 0; font-size: 12px; font-style: italic; color: #555;">Restaurante Familiar</p>
+        // 4. ACTUALIZAR GRÁFICAS
+        renderizarGraficaCategorias(ventasPorTipo);
+        renderizarGraficaTopProductos(ventasPorTipo);
+
+        // 5. INYECTAR RESUMEN FINAL (Fuera del grid de pedidos)
+        const resumenFinalHTML = `
+            <div id="resumen-final-ventas" class="col-12 mt-4 mb-5">
+                <div class="card bg-dark text-white p-4 rounded-4 shadow border-0">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <h5 class="fw-bold text-danger">💡 Recomendaciones del Capi</h5>
+                            <p class="mb-0">Estrella: <b class="text-warning">${productoMasVendido.nombre}</b> con ${productoMasVendido.cantidad} ventas.</p>
+                        </div>
+                        <div class="col-md-4 text-md-end">
+                            <button class="btn btn-light rounded-pill fw-bold" 
+                                onclick='imprimirResumenCarta(${JSON.stringify(ventasPorTipo)}, "${fechaSeleccionada}")'>
+                                🖨️ Reporte PDF
+                            </button>
+                        </div>
                     </div>
-                    <h4>Ventas por Tipo</h4>
-                    <p><strong>Fecha:</strong> ${fechaSeleccionada}</p>
-                    <hr>
-                    ${tablaHTML}
-                    <hr>
-                    <p style="text-align:center;">¡Gracias por su esfuerzo!</p>
-                    <div class="saludo">#somosLosDosCarnales👬</div>
-
-                    <script>
-                        window.onload = function() {
-                            window.print();
-                            setTimeout(() => window.close(), 500);
-                        }
-                    </script>
-                </body>
-            </html>
-        `);
+                </div>
+            </div>
+        `;
+        
+        // Lo insertamos después de la lista de pedidos
+        listaVentas.insertAdjacentHTML('afterend', resumenFinalHTML);
 
     } catch (error) {
-        console.error("Error al generar ventas por tipo:", error);
-        alert("❌ No se pudo generar el resumen por tipo.");
+        console.error("Error en estadísticas:", error);
     }
+}
+/**
+ * Función de Impresión Tamaño Carta (PDF)
+ */
+window.imprimirResumenCarta = function(datos, fecha) {
+    const ventana = window.open('', '', 'width=900,height=1000');
+    
+    let filas = "";
+    Object.keys(datos).forEach(tipo => {
+        filas += `
+            <tr style="background:#f9f9f9;">
+                <td style="padding:12px; border:1px solid #ddd; font-weight:bold;">${tipo.toUpperCase()}</td>
+                <td style="padding:12px; border:1px solid #ddd; text-align:center;">${datos[tipo].cantidad}</td>
+                <td style="padding:12px; border:1px solid #ddd; text-align:right;">$${datos[tipo].total.toFixed(2)}</td>
+            </tr>
+        `;
+    });
+
+    ventana.document.write(`
+        <html>
+            <head>
+                <title>Reporte Administrativo - LDC</title>
+                <style>
+                    body { font-family: 'Segoe UI', Helvetica, Arial, sans-serif; padding: 40px; color: #333; line-height: 1.6; }
+                    .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #dc3545; padding-bottom: 20px; margin-bottom: 30px; }
+                    .logo { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; }
+                    h1 { margin: 0; color: #dc3545; font-size: 28px; text-transform: uppercase; }
+                    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+                    th { background: #333; color: white; padding: 12px; text-align: left; text-transform: uppercase; font-size: 13px; }
+                    .footer { margin-top: 50px; text-align: center; font-size: 12px; color: #777; border-top: 1px solid #eee; padding-top: 20px; }
+                    .info-meta { margin-bottom: 20px; background: #f4f4f4; padding: 15px; border-radius: 8px; }
+                    @media print { .no-print { display: none; } }
+                </style>
+            </head>
+            <body>
+                <div class="header">
+                    <div>
+                        <h1>LOS DOS CARNALES</h1>
+                        <p style="margin:0; color:#666;">Reporte Diario de Ventas por Categoría</p>
+                    </div>
+                    <img src="https://felix2114.github.io/front-ldc/images/LosDosCar.jpeg" class="logo">
+                </div>
+                
+                <div class="info-meta">
+                    <p style="margin:0;"><strong>Fecha del Reporte:</strong> ${fecha}</p>
+                    <p style="margin:5px 0 0 0;"><strong>Generado por:</strong> Administrador </p>
+                </div>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Categoría / Tipo</th>
+                            <th style="text-align:center;">Cant. Productos</th>
+                            <th style="text-align:right;">Total Vendido</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${filas}
+                    </tbody>
+                </table>
+
+                <div class="footer">
+                    <p>Este documento es un comprobante interno de administración para el control de inventarios y ventas diarias.</p>
+                    <p>#somosLosDosCarnales 👬</p>
+                </div>
+
+                <script>
+                    window.onload = function() { 
+                        window.print(); 
+                        setTimeout(() => window.close(), 1000); 
+                    }
+                </script>
+            </body>
+        </html>
+    `);
 }
 
 
