@@ -39,6 +39,10 @@ document.addEventListener("DOMContentLoaded", async () => {
     const listaAntojitos = document.getElementById("tablaAntojitos");
     const listaMariscos = document.getElementById("tablaMariscos");
     const listaBebidas = document.getElementById("tablaBebidas");
+    const listaCigarros = document.getElementById("tablaCigarros");
+    const listaChidas = document.getElementById("tablaChidas");
+    const listaDulces = document.getElementById("tablaDulces");
+    const listaPostres = document.getElementById("tablaPostres");
     const listaMesas = document.getElementById("listaMesas");
     document.getElementById("fechaVentas").valueAsDate = new Date();
 
@@ -411,16 +415,28 @@ lista.onclick = async (e) => {
         listaSnacks.innerHTML = "";
         listaAntojitos.innerHTML = "";
         listaMariscos.innerHTML = "";
+        listaCigarros.innerHTML = "";
+        listaChidas.innerHTML = "";
+        listaDulces.innerHTML = "";
+        listaPostres.innerHTML = "";
 
         const comidas = menu.filter(item => item.tipo === 'comida');
         const snacks = menu.filter(item => item.tipo === 'snack');
         const antojitos = menu.filter(item => item.tipo == 'antojito')
         const mariscos = menu.filter(item => item.tipo == 'marisco')
+        const cigarros = menu.filter(item => item.tipo == 'cigarro')
+        const chidas = menu.filter(item => item.tipo == 'chida')
+        const dulces = menu.filter(item => item.tipo == 'dulce')
+        const postres = menu.filter(item => item.tipo == 'postre')
 
         comidas.forEach(comida => agregarFilaComida(comida, listaComidas));
         snacks.forEach(snack => agregarFilaComida(snack, listaSnacks));
         antojitos.forEach(antojitos => agregarFilaComida(antojitos, listaAntojitos));
         mariscos.forEach(mariscos => agregarFilaComida(mariscos, listaMariscos));
+        cigarros.forEach(cigarros => agregarFilaComida(cigarros, listaCigarros));
+        chidas.forEach(chidas => agregarFilaComida(chidas, listaChidas));
+        dulces.forEach(dulces => agregarFilaComida(dulces, listaDulces));
+        postres.forEach(postres => agregarFilaComida(postres, listaPostres));
     }
 
     
@@ -1545,6 +1561,96 @@ window.imprimirResumenCarta = function(datos, fecha) {
             console.error("Error al agregar Marisco:", error);
         }
     });
+
+
+    document.getElementById("agregarCigarro").addEventListener("click", async () => {
+        const nombre = prompt("Nombre del Cigarro:");
+        const precio = parseFloat(prompt("Precio:"));
+
+        if (!nombre || isNaN(precio)) {
+            alert("Datos inválidos");
+            return;
+        }
+
+        try {
+            await fetch(apiURL, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ nombre, precio, tipo: "cigarro" })
+            });
+            cargarDatos();
+            alert("Cigarro agregado correctamente.");
+        } catch (error) {
+            console.error("Error al agregar Cigarro:", error);
+        }
+    });
+
+    document.getElementById("agregarChida").addEventListener("click", async () => {
+        const nombre = prompt("Nombre del Chidas:");
+        const precio = parseFloat(prompt("Precio:"));
+
+        if (!nombre || isNaN(precio)) {
+            alert("Datos inválidos");
+            return;
+        }
+
+        try {
+            await fetch(apiURL, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ nombre, precio, tipo: "chidas" })
+            });
+            cargarDatos();
+            alert("Chidas agregado correctamente.");
+        } catch (error) {
+            console.error("Error al agregar chidas:", error);
+        }
+    });
+
+    document.getElementById("agregarDulce").addEventListener("click", async () => {
+        const nombre = prompt("Nombre del Dulce:");
+        const precio = parseFloat(prompt("Precio:"));
+
+        if (!nombre || isNaN(precio)) {
+            alert("Datos inválidos");
+            return;
+        }
+
+        try {
+            await fetch(apiURL, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ nombre, precio, tipo: "dulce" })
+            });
+            cargarDatos();
+            alert("Dulce agregado correctamente.");
+        } catch (error) {
+            console.error("Error al agregar Dulce:", error);
+        }
+    });
+
+    document.getElementById("agregarPostre").addEventListener("click", async () => {
+        const nombre = prompt("Nombre del Postre:");
+        const precio = parseFloat(prompt("Precio:"));
+
+        if (!nombre || isNaN(precio)) {
+            alert("Datos inválidos");
+            return;
+        }
+
+        try {
+            await fetch(apiURL, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ nombre, precio, tipo: "postre" })
+            });
+            cargarDatos();
+            alert("Postre agregado correctamente.");
+        } catch (error) {
+            console.error("Error al agregar Postre:", error);
+        }
+    });
+
 
 
     let intervaloActualizacion;

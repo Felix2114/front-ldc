@@ -76,6 +76,10 @@
                             <li class="nav-item flex-fill"><button class="nav-link rounded-pill w-100" data-bs-toggle="pill" data-bs-target="#pills-snacks">Snacks</button></li>
                             <li class="nav-item flex-fill"><button class="nav-link rounded-pill w-100" data-bs-toggle="pill" data-bs-target="#pills-antojitos">Antojitos</button></li>
                             <li class="nav-item flex-fill"><button class="nav-link rounded-pill w-100" data-bs-toggle="pill" data-bs-target="#pills-mariscos">Mariscos</button></li>
+                            <li class="nav-item flex-fill"><button class="nav-link rounded-pill w-100" data-bs-toggle="pill" data-bs-target="#pills-cigarros">Cigarros</button></li>
+                            <li class="nav-item flex-fill"><button class="nav-link rounded-pill w-100" data-bs-toggle="pill" data-bs-target="#pills-chidas">Chidas</button></li>
+                            <li class="nav-item flex-fill"><button class="nav-link rounded-pill w-100" data-bs-toggle="pill" data-bs-target="#pills-dulces">Dulces</button></li>
+                            <li class="nav-item flex-fill"><button class="nav-link rounded-pill w-100" data-bs-toggle="pill" data-bs-target="#pills-postres">Postres</button></li>
                         </ul>
                         <div class="tab-content">
                             <div class="tab-pane fade show active" id="pills-comidas">
@@ -94,19 +98,36 @@
                                 <table class="table"><tbody id="tablaMariscos"></tbody></table>
                                 <button class="btn btn-danger" id="agregarMarisco">+ Marisco</button>
                             </div>
-                        </div>
+                            <div class="tab-pane fade" id="pills-cigarros">
+                                <table class="table"><tbody id="tablaCigarros"></tbody></table>
+                                <button class="btn btn-danger" id="agregarCigarro">+ Cigarro</button>
+                            </div>
+                            <div class="tab-pane fade" id="pills-chidas">
+                                <table class="table"><tbody id="tablaChidas"></tbody></table>
+                                <button class="btn btn-danger" id="agregarChida">+ Chida</button>
+                            </div>
+                            <div class="tab-pane fade" id="pills-dulces">
+                                <table class="table"><tbody id="tablaDulces"></tbody></table>
+                                <button class="btn btn-danger" id="agregarDulce">+ Dulce</button>
+                            </div>
+                            <div class="tab-pane fade" id="pills-postres">
+                                <table class="table"><tbody id="tablaPostres"></tbody></table>
+                                <button class="btn btn-danger" id="agregarPostre">+ Postre</button>
+                            </div>
+                            
                     </div>
+                 </div>
                 </div>
 
-                <div class="tab-pane fade" id="inventario">
+                 <div class="tab-pane fade" id="inventario">
                     <div class="card p-4 border-0 shadow-sm rounded-4">
                         <h4 class="fw-bold mb-4">📦 Stock de Bebidas</h4>
                         <table class="table"><tbody id="tablaBebidas"></tbody></table>
                         <button class="btn btn-primary" id="agregarBebida">Agregar Bebida</button>
                     </div>
-                </div>
+                 </div>
 
-                <div class="tab-pane fade" id="mesas">
+                 <div class="tab-pane fade" id="mesas">
                     <div class="card p-4 border-0 shadow-sm rounded-4">
                         <h4 class="fw-bold mb-4">🪑 Gestión de Mesas</h4>
                         <div class="d-flex gap-2 mb-3">
@@ -116,9 +137,11 @@
                         <div id="contenedorMesas" class="d-flex flex-wrap gap-2"></div>
                         <table class="d-none"><tbody id="listaMesas"></tbody></table>
                     </div>
-                </div>
+                 </div>
 
-                <div class="tab-pane fade" id="confirmarPedidos">
+                 
+
+                 <div class="tab-pane fade" id="confirmarPedidos">
                     <div class="card p-4 border-0 shadow-sm rounded-4">
                         <h4 class="fw-bold mb-4">✅ Confirmar Pedidos</h4>
                         <div class="d-flex gap-2 mb-3">
@@ -127,10 +150,10 @@
                         </div>
                         <div id="listaPedidosPorConfirmar"></div>
                     </div>
-                </div>
+                 </div>
 
-            </div>
-        </div>
+              
+                  </div>
     </main>
 </div>
 

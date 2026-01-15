@@ -27,13 +27,17 @@ document.addEventListener("DOMContentLoaded", async () => {
     const listaSnacks = document.getElementById("listaSnacks");
     const listaAntojitos = document.getElementById("listaAntojitos");
     const listaMariscos = document.getElementById("listaMariscos");
-    //const listaOrdenesPendientes = document.getElementById("listaOrdenesPendientes");
-    //const listaHistorialPedidos = document.getElementById("listaHistorialPedidos");
+
+    const listaDulces = document.getElementById("listaDulces");
+    const listaPostres = document.getElementById("listaPostres");
+    const listaChidas = document.getElementById("listaChidas");
+    const listaCigarros = document.getElementById("listaCigarros");
+
+ 
     const botonCancelar = document.getElementById("cancelarPedido");
     const contenidoModalPedido = document.getElementById("contenidoModalPedido");//este
     const botonConfirmar = document.getElementById("confirmarPedido");
-    //document.getElementById("confirmarPedido").addEventListener("click", mostrarPedido);
-    
+ 
     const mesaEditando = document.getElementById("mesaEditando");
      const inputBusqueda = document.getElementById("buscadorProductos");
      const inputBusquedaEditar = document.getElementById("buscadorProductosEditar");
@@ -43,7 +47,12 @@ const listasProductos = [
         document.getElementById("listaBebidas"),
         document.getElementById("listaSnacks"),
         document.getElementById("listaAntojitos"),
-        document.getElementById("listaMariscos")
+        document.getElementById("listaMariscos"),
+        document.getElementById("listaDulces"),
+        document.getElementById("listaPostres"),
+        document.getElementById("listaChidas"),
+        document.getElementById("listaCigarros")
+
     ];
 
     const listasProductosEditar = [
@@ -51,7 +60,11 @@ const listasProductos = [
         document.getElementById("listaEditarBebidas"),
         document.getElementById("listaEditarSnacks"),
        document.getElementById("listaEditarAntojitos"),
-       document.getElementById("listaEditarMariscos")
+       document.getElementById("listaEditarMariscos"),
+        document.getElementById("listaEditarDulces"),
+        document.getElementById("listaEditarPostres"),
+        document.getElementById("listaEditarChidas"),
+        document.getElementById("listaEditarCigarros")
     ];
 
  let pedidoEditar = {
@@ -182,22 +195,14 @@ async function cargarOrdenes() {
     const respuesta = await fetch(`${apiURL}/pedidos/estado/pendiente`);
     const pedidos = await respuesta.json();
 
-    const hoy = new Date();
-
-    // 👉 Obtener YYYY-MM-DD en hora local
-    const yyyy = hoy.getFullYear();
-    const mm = String(hoy.getMonth() + 1).padStart(2, "0");
-    const dd = String(hoy.getDate()).padStart(2, "0");
-    const hoyStr = `${yyyy}-${mm}-${dd}`; // "2025-08-23"
+   
 
     const listaPendientes = document.getElementById("listaOrdenesPendientes");
     listaPendientes.innerHTML = "";
 
     pedidos.forEach(pedido => {
-        // 👇 Ahora comparamos directo con el string que guardamos
-        const mismoDia = pedido.fecha === hoyStr;
-
-        if (pedido.estado === "pendiente" && mismoDia) {
+    
+        if (pedido.estado === "pendiente" ) {
             const div = document.createElement("div");
             div.classList.add("card", "mb-2", "p-2");
 
@@ -876,6 +881,19 @@ const productosFormateados = Object.values(productosMap);
                 else if (item.tipo === "marisco" && !document.querySelector(`[data-nombre="${item.nombre}"]`)) {
                     agregarItemsLista([item], listaMariscos);
                 }
+                else if (item.tipo === "dulce" && !document.querySelector(`[data-nombre="${item.nombre}"]`)) {
+                    agregarItemsLista([item], listaDulces);
+                }
+                else if (item.tipo === "postre" && !document.querySelector(`[data-nombre="${item.nombre}"]`)) {
+                    agregarItemsLista([item], listaPostres);
+                }
+                else if (item.tipo === "cigarro" && !document.querySelector(`[data-nombre="${item.nombre}"]`)) {
+                    agregarItemsLista([item], listaCigarros);
+                }
+                else if (item.tipo === "chidas" && !document.querySelector(`[data-nombre="${item.nombre}"]`)) {
+                    agregarItemsLista([item], listaChidas);
+                }
+
             });
     
             inventario.forEach(item => {
