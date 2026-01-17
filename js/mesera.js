@@ -21,6 +21,8 @@ let spansEditar = {};
 
 document.addEventListener("DOMContentLoaded", async () => {
     const apiURL = "https://api-ldc.onrender.com";
+    //const apiURL = "http://localhost:5000"; // PARA PRUEBAS LOCALES
+
     const mesasContainer = document.getElementById("mesasContainer");
     const listaComidas = document.getElementById("listaComidas");
     const listaBebidas = document.getElementById("listaBebidas");
@@ -378,12 +380,22 @@ async function cargarOrdenes() {
         const listaEditarSnacks = document.getElementById("listaEditarSnacks");
         const listaEditarAntojitos = document.getElementById("listaEditarAntojitos");
         const listaEditarMariscos = document.getElementById("listaEditarMariscos");
+        const listaEditarDulces = document.getElementById("listaEditarDulces");
+        const listaEditarPostres = document.getElementById("listaEditarPostres");
+        const listaEditarCigarros = document.getElementById("listaEditarCigarros");
+        const listaEditarChidas = document.getElementById("listaEditarChidas");
+
 
         listaEditarComidas.innerHTML = '';
         listaEditarBebidas.innerHTML = '';
         listaEditarSnacks.innerHTML = '';
         listaEditarAntojitos.innerHTML = '';
         listaEditarMariscos.innerHTML = '';
+        listaEditarDulces.innerHTML = '';
+        listaEditarPostres.innerHTML = '';
+        listaEditarCigarros.innerHTML = '';
+        listaEditarChidas.innerHTML = '';
+        
 
         // ✅ Cargar comidas y snacks
         menu.forEach(item => {
@@ -402,6 +414,19 @@ async function cargarOrdenes() {
             else if (item.tipo === "marisco") {
                 agregarItemsListaEditar([item], listaEditarMariscos, cantidadInicial);
             }
+            else if (item.tipo === "dulce") {
+                agregarItemsListaEditar([item], listaEditarDulces, cantidadInicial);
+            }
+            else if (item.tipo === "postre") {
+                agregarItemsListaEditar([item], listaEditarPostres, cantidadInicial);
+            }
+            else if (item.tipo === "cigarro") {
+                agregarItemsListaEditar([item], listaEditarCigarros, cantidadInicial);
+            }
+            else if (item.tipo === "chidas") {
+                agregarItemsListaEditar([item], listaEditarChidas, cantidadInicial);
+            }
+
         });
 
         // ✅ Cargar bebidas
@@ -940,13 +965,8 @@ async function enviarPedido(pedido) {
     const overlayContent = document.getElementById("overlayContent");
 
     try {
-        // Mostrar overlay con animación de carga
         overlay.style.display = "flex";
         overlayContent.innerHTML = `<div class="loader"></div><p class="mt-3">Enviando pedido...</p>`;
-
-        pedido.mesera = document.getElementById("nombreMesera").value;
-        pedido.cliente = document.getElementById("nombreCliente").value;
-        pedido.nota = document.getElementById("notaPedido").value;
 
         if (!pedido.mesa) {
             overlay.style.display = "none";
@@ -954,120 +974,53 @@ async function enviarPedido(pedido) {
             return;
         }
 
-        const total = pedido.items.reduce((acc, item) => acc + item.cantidad * item.precio, 0);
+        // --- CONSTRUCCIÓN DEL PAYLOAD CORREGIDA ---
+        const payload = {
+            mesaId: pedido.mesa,
+            mesera: document.getElementById("nombreMesera").value || "Anónimo",
+            cliente: document.getElementById("nombreCliente").value || "",
+            nota: document.getElementById("notaPedido").value || "",
+            productos: pedido.items.map(item => {
+                // Objeto base que funciona para comidas/snacks
+                let productoRequest = {
+                    nombre: item.nombre,
+                    cantidad: item.cantidad,
+                    precio: item.precio // El backend ahora lo requiere para calcular totales
+                };
 
-        // ✅ Generar folio justo antes de guardar
-        const folio = await obtenerYActualizarFolio();
-     const ahora = new Date();
+                // Si es una bebida (trae datos extra del inventario), los incluimos
+                if (item.tipo) {
+                    productoRequest.tipo = item.tipo; // Incluye el ID y nombre de la categoría
+                }
 
-// --- Fecha solo (YYYY-MM-DD) en horario local ---
-const year = ahora.getFullYear();
-const month = String(ahora.getMonth() + 1).padStart(2, "0"); // getMonth() empieza en 0
-const day = String(ahora.getDate()).padStart(2, "0");
-const fecha = `${year}-${month}-${day}`;   // ej: "2025-08-22"
+                return productoRequest;
+            })
+        };
 
-// --- Fecha completa legible (local) ---
-const fechaCompleta = ahora.toLocaleString("es-MX", {
-  year: "numeric",
-  month: "2-digit",
-  day: "2-digit",
-  hour: "2-digit",
-  minute: "2-digit",
-  second: "2-digit",
-  hour12: true
-});
+        console.log("Payload enviado al servidor:", JSON.stringify(payload, null, 2));
 
-// Guardar en Firestore
-const pedidoDocRef = await addDoc(collection(db, "pedidos"), {
-  folio: folio,
-  entregado: false,
-  estado: "pendiente",
-  fecha: fecha,               // ✅ siempre YYYY-MM-DD local
-  fechaCompleta: fechaCompleta, // ✅ legible para mostrar
-  mesaId: pedido.mesa.toString(),
-  mesera: pedido.mesera || "Anónimo",
-  cliente: pedido.cliente || "",
-  nota: pedido.nota || "",
-  total: total,
-  guardado: false,
-  descuento: "",
-  metodo_Pago: "",
-});
+        const res = await fetch(`${apiURL}/pedidos/nuevo`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+        });
 
-
-        const productosRef = collection(pedidoDocRef, "productos");
-
-        for (const item of pedido.items) {
-            await addDoc(productosRef, {
-                nombre: item.nombre,
-                cantidad: item.cantidad,
-                precio: item.precio,
-                subtotal: item.cantidad * item.precio,
-                estado: false,
-                
-            });
-
-            await actualizarInventarioBebida(item.nombre, item.cantidad);
+        // Si el servidor responde 400, intentamos leer el mensaje de error para debug
+        if (!res.ok) {
+            const errorData = await res.json().catch(() => ({}));
+            console.error("Error del servidor:", errorData);
+            throw new Error(errorData.message || "Error al enviar pedido");
         }
 
-        await actualizarEstadoMesa(pedido.mesa);
-
-        // Mostrar palomita de éxito
         overlayContent.innerHTML = `<div class="checkmark">✅</div><p class="mt-3">Pedido enviado</p>`;
-
-        // Recargar después de 1.5 segundos
-        setTimeout(() => {
-            window.location.reload();
-        }, 1500);
+        setTimeout(() => window.location.reload(), 1500);
 
     } catch (error) {
-        console.error("❌ Error al enviar el pedido:", error);
+        console.error("❌ Detalle del error:", error);
         overlay.style.display = "none";
-        alert("Ocurrió un error al enviar el pedido.");
+        alert(`Ocurrió un error: ${error.message}`);
     }
 }
-
-
-
-   
-
-
-    //RESTAR A BEBIDAS
-    async function actualizarInventarioBebida(nombre, cantidadUsada) {
-        try {
-            const bebidasSnap = await getDocs(collection(db, "inventario_bebidas"));
-            const bebidaDoc = bebidasSnap.docs.find(doc => doc.data().nombre === nombre);
-    
-            if (bebidaDoc) {
-                const bebidaRef = doc(db, "inventario_bebidas", bebidaDoc.id);
-                const nuevaCantidad = bebidaDoc.data().cantidad - cantidadUsada;
-    
-                await updateDoc(bebidaRef, {
-                    cantidad: nuevaCantidad >= 0 ? nuevaCantidad : 0
-                });
-            }
-        } catch (err) {
-            console.warn(`⚠️ No se pudo actualizar inventario para ${nombre}:`, err);
-        }
-    }
-
-    //ESTADO DE MESA OCUPADA O LISTA
-    async function actualizarEstadoMesa(numeroMesa) {
-        try {
-            const mesasSnap = await getDocs(collection(db, "mesas"));
-            const mesaDoc = mesasSnap.docs.find(doc => doc.data().numero == numeroMesa);
-    
-            if (mesaDoc) {
-                const mesaRef = doc(db, "mesas", mesaDoc.id);
-                await updateDoc(mesaRef, {
-                    disponible: false
-                });
-            }
-        } catch (err) {
-            console.warn(`⚠️ No se pudo marcar la mesa ${numeroMesa} como ocupada:`, err);
-        }
-    }
-    
   
 
     // función auxiliar para escapar texto (seguridad básica)

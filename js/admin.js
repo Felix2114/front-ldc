@@ -13,6 +13,11 @@ import {
   doc 
 } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
+import { 
+  cargarTiposBebidas,
+  setBebidasGlobal
+} from "../js/inventario.js";
+
 const firebaseConfig = {
     apiKey: "AIzaSyC_gRa6lymckHIrZQwUyQEfnuvT-oAOdwk",
     authDomain: "l-d-c-2025.firebaseapp.com",
@@ -30,7 +35,11 @@ const db = getFirestore(app);
 
 document.addEventListener("DOMContentLoaded", async () => {
     const apiURL = "https://api-ldc.onrender.com/menu";
-    const apiInventario = "https://api-ldc.onrender.com/inventario";
+   // const apiInventario = "http://localhost:5000/tipoBebidas";
+   //const apiBebidas = "http://localhost:5000/inventario";
+    const apiInventario = "https://api-ldc.onrender.com/tipoBebidas"; 
+    const apiBebidas = "https://api-ldc.onrender.com/inventario";
+
     const apiPedidos = "https://api-ldc.onrender.com/pedidos";
     const apiMesas = "https://api-ldc.onrender.com/mesas";
 
@@ -282,35 +291,58 @@ lista.onclick = async (e) => {
 
 
 
-    async function cargarDatos() {
-        try {
-            let [menuRes, inventarioRes, pedidosPendientesRes, mesasRes] = await Promise.all([
-                fetch(apiURL),
-                fetch(`${apiInventario}/bebidas`),
-                fetch(`${apiPedidos}/estado/pendiente`),
-                fetch(apiMesas)
-            ]);
+async function cargarDatos() {
+    try {
+        const [
+            menuRes,
+            tiposBebidasRes,
+            bebidasRes,
+            pedidosPendientesRes,
+            mesasRes
+        ] = await Promise.all([
+            fetch(apiURL),
+            fetch(`${apiInventario}/bebidas/tipos-bebidas`),
+            fetch(`${apiBebidas}/bebidas`),
+            fetch(`${apiPedidos}/estado/pendiente`),
+            fetch(apiMesas)
+        ]);
 
-            let [menu, inventario, pedidosPendientes, mesas] = await Promise.all([
-                menuRes.json(),
-                inventarioRes.json(),
-                pedidosPendientesRes.json(),
-                mesasRes.json()
-            ]);
+        const [
+            menu,
+            tiposBebidas,
+            bebidas,
+            pedidosPendientes,
+            mesas
+        ] = await Promise.all([
+            menuRes.json(),
+            tiposBebidasRes.json(),
+            bebidasRes.json(),
+            pedidosPendientesRes.json(),
+            mesasRes.json()
+        ]);
 
+        mostrarMenu(menu);
+        mostrarMesas(mesas);
+        mostrarVentas(pedidosPendientes);
 
-            bebidasGlobal = inventario;
-
-            mostrarMenu(menu);
-            mostrarInventario(inventario);
-            mostrarMesas(mesas);
-           mostrarVentas(pedidosListos);
-           
-
-        } catch (error) {
-            console.error("Error al cargar datos:", error);
-        }
+        // 🔥 INVENTARIO
+        setBebidasGlobal(bebidas); // por ahora vacío
+        await cargarTiposBebidas(tiposBebidas);
+        if (tiposBebidas.length > 0) {
+    const primerTipo = tiposBebidas[0].nombre;
+    
+    // Llamada segura a la función global
+    if (typeof window.filtrarBebidasPorTipo === 'function') {
+        window.filtrarBebidasPorTipo(primerTipo);
     }
+}
+        
+
+    } catch (error) {
+        console.error("❌ Error al cargar datos:", error);
+    }
+}
+
 
 
     function mostrarMesas(mesas) {
@@ -441,35 +473,7 @@ lista.onclick = async (e) => {
 
     
 
-   function mostrarInventario(inventario) {
-    listaBebidas.innerHTML = "";
-
-    if (Array.isArray(inventario)) {
-        inventario.forEach(bebida => agregarFilaBebida(bebida));
-        
-        // Eliminar botón si ya existe para evitar duplicados
-        const botonExistente = listaBebidas.parentElement.querySelector("#btnImprimirInventario");
-        if (botonExistente) botonExistente.remove();
-
-        // Crear botón con estilos
-        const boton = document.createElement("button");
-        boton.id = "btnImprimirInventario";
-        boton.textContent = "Imprimir Inventario";
-        
-        // Bootstrap styles (puedes ajustar si usas otro framework)
-        boton.className = "btn btn-success btn-sm mt-3";
-        boton.style.display = "block"; // Que tome línea propia
-        boton.style.marginLeft = "auto"; // Para alinear a la derecha
-        boton.style.marginRight = "0";
-
-        boton.onclick = () => imprimirTicketInventario(inventario);
-
-        listaBebidas.parentElement.appendChild(boton);
-
-    } else {
-        console.error("Inventario inválido");
-    }
-}
+   
 
 function imprimirTicket(pedido) {
     const fecha = new Date();
@@ -595,121 +599,6 @@ function imprimirTicket(pedido) {
     `);
 }
 
-function imprimirTicketInventario(bebidasGlobal) {
-    const fecha = new Date();
-    const fechaStr = fecha.toLocaleDateString();
-    const horaStr = fecha.toLocaleTimeString();
-
-    // Lista de nombres permitidos
-    const permitidos = [
-        "TEHUACAN TOPO CHICO",
-        "SIDRAL",
-        "REFRESCO PASCUAL",
-        "COCA-COLA",
-        "MODELO ESPECIAL",
-        "CORONA CERO",
-        "MEXICOLA",
-        "TEHUACAN CHICO",
-        "NEGRA MODELO",
-        "BOING",
-        "CERVEZA CUARTITO",
-        "CORONA",
-        "AGUA 600ML",
-        "ULTRA",
-        "AGUA 1LT",
-        "VICTORIA",
-        "BOTELLA TORITO",
-        "PACIFICO"
-    ];
-
-    // Filtrar solo los productos permitidos
-    const filtrados = bebidasGlobal.filter(b => permitidos.includes(b.nombre));
-
-    let filas = "";
-    filtrados.forEach(b => {
-        filas += `
-            <tr>
-                <td>${b.nombre}</td>
-                <td>${b.stock}</td>
-                <td>$${parseFloat(b.precio).toFixed(2)}</td>
-            </tr>
-        `;
-    });
-
-    const ventana = window.open('', '', 'width=400,height=700');
-
-    ventana.document.write(`
-        <html>
-            <head>
-                <title>Inventario</title>
-                <style>
-                    body {
-                        font-family: monospace;
-                        padding: 10px;
-                        text-align: center;
-                        margin: 0;
-                    }
-                    img.logo {
-                        width: 100px;
-                        margin: 0 auto 10px auto;
-                    }
-                    h2 {
-                        margin: 0;
-                    }
-                    .info {
-                        text-align: left;
-                        margin: 10px 0;
-                    }
-                    table {
-                        width: 100%;
-                        border-collapse: collapse;
-                        margin-top: 10px;
-                    }
-                    th, td {
-                        border-bottom: 1px dashed #000;
-                        padding: 4px;
-                        text-align: center;
-                    }
-                    .saludo {
-                        margin-top: 15px;
-                        font-size: 12px;
-                    }
-                </style>
-            </head>
-            <body>
-                <img src="https://felix2114.github.io/front-ldc/images/LosDosCar.jpeg" class="logo" alt="Logo"><br>
-                <h2>INVENTARIO DE BEBIDAS</h2>
-                
-                <div class="info">
-                    <p><strong>Fecha:</strong> ${fechaStr}</p>
-                    <p><strong>Hora:</strong> ${horaStr}</p>
-                </div>
-
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Nombre</th>
-                            <th>Stock</th>
-                            <th>Precio</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${filas}
-                    </tbody>
-                </table>
-
-                <div class="saludo">¡Revisa el inventario con tiempo!</div>
-
-                <script>
-                    window.onload = function() {
-                        window.print();
-                        setTimeout(() => window.close(), 500);
-                    }
-                </script>
-            </body>
-        </html>
-    `);
-}
 
 function imprimirResumenVentas(pedidos) {
     const fechaSeleccionada = document.getElementById("fechaVentas").value;
@@ -1106,7 +995,7 @@ async function mostrarVentasPorTipo(pedidos) {
                         <span class="text-muted">$${(item.cantidad * item.precio).toFixed(2)}</span>
                     </div>`;
 
-                    const tipo = menuMap[item.nombre] || "Cerveza";
+                    const tipo = menuMap[item.nombre] || "Bebidas";
                     const subtotal = item.cantidad * item.precio;
 
                     if (!ventasPorTipo[tipo]) ventasPorTipo[tipo] = { total: 0, cantidad: 0, productos: {} };
@@ -1368,42 +1257,7 @@ window.imprimirResumenCarta = function(datos, fecha) {
         lista.appendChild(row);
     }
 
-    function agregarFilaBebida(bebida) {
-        let row = document.createElement("tr");
-        row.innerHTML = `
-            <td contenteditable="true">${bebida.nombre}</td>
-            <td contenteditable="true">${bebida.precio}</td>
-            <td contenteditable="true">${bebida.stock}</td>
-            <td>
-                <button class="btn btn-danger btn-sm eliminar">🗑️ Eliminar</button>
-                <button class="btn btn-success btn-sm editar">✅ Guardar</button>
-            </td>
-        `;
-
-        row.querySelector(".eliminar").addEventListener("click", async () => {
-            await eliminarBebida(bebida.id);
-            cargarDatos();
-            alert("Bebida eliminada correctamente.");
-        });
-
-        row.querySelector(".editar").addEventListener("click", async () => {
-            let nuevoNombre = row.children[0].textContent.trim();
-            let nuevoPrecio = parseFloat(row.children[1].textContent.trim());
-            let nuevoStock = parseInt(row.children[2].textContent.trim());
-
-            if (!nuevoNombre || isNaN(nuevoPrecio) || isNaN(nuevoStock)) {
-                alert("Nombre, precio o stock inválido");
-                return;
-            }
-
-            await actualizarBebida(bebida.id, nuevoNombre, nuevoPrecio, nuevoStock);
-            cargarDatos();
-            alert("Bebida actualizada correctamente.");
-        });
-
-        listaBebidas.appendChild(row);
-    }
-
+    
     async function eliminarProducto(id) {
         try {
             await fetch(`${apiURL}/${id}`, { method: "DELETE" });
@@ -1424,51 +1278,8 @@ window.imprimirResumenCarta = function(datos, fecha) {
         }
     }
 
-    async function eliminarBebida(id) {
-        try {
-            await fetch(`${apiInventario}/bebidas/${id}`, { method: "DELETE" });
-        } catch (error) {
-            console.error("Error eliminando bebida:", error);
-        }
-    }
+   
 
-    async function actualizarBebida(id, nombre, precio, stock) {
-        try {
-            await fetch(`${apiInventario}/bebidas/${id}`, {
-                method: "PUT",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ nombre, precio, stock })
-            });
-        } catch (error) {
-            console.error("Error actualizando bebida:", error);
-        }
-    }
-
-    
-
-    // Agregar Bebida
-    document.getElementById("agregarBebida").addEventListener("click", async () => {
-        const nombre = prompt("Nombre de la bebida:");
-        const precio = parseFloat(prompt("Precio:"));
-        const stock = parseInt(prompt("Stock inicial:"));
-
-        if (!nombre || isNaN(precio) || isNaN(stock)) {
-            alert("Datos inválidos");
-            return;
-        }
-
-        try {
-            await fetch(`${apiInventario}/bebidas`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ nombre, precio, stock })
-            });
-            cargarDatos();
-            alert("Bebida agregada correctamente.");
-        } catch (error) {
-            console.error("Error agregando bebida:", error);
-        }
-    });
 
     // Agregar Comida
     document.getElementById("agregarComida").addEventListener("click", async () => {

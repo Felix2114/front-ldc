@@ -119,13 +119,34 @@
                  </div>
                 </div>
 
-                 <div class="tab-pane fade" id="inventario">
+                <div class="tab-pane fade" id="inventario">
                     <div class="card p-4 border-0 shadow-sm rounded-4">
                         <h4 class="fw-bold mb-4">📦 Stock de Bebidas</h4>
-                        <table class="table"><tbody id="tablaBebidas"></tbody></table>
-                        <button class="btn btn-primary" id="agregarBebida">Agregar Bebida</button>
+                        <ul class="nav nav-pills mb-4 bg-white p-2 rounded-pill shadow-sm" id="navTiposBebida" role="tablist">
+                        </ul>
+                
+                        <div class="table-responsive mt-3">
+    <table class="table table-hover align-middle border-0">
+        <thead class="table-dark"> <tr>
+                <th class="ps-3">PRODUCTO</th>
+                <th>STOCK</th>
+                <th>PRECIO</th>
+                <th class="text-end pe-3">ACCIONES</th>
+            </tr>
+        </thead>
+        <tbody id="tablaBebidas">
+            </tbody>
+    </table>
+</div>
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-primary" id="agregarBebida">➕ Agregar Bebida</button>
+                            <button class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#modalTipoBebida">
+                                🏷️ Tipos de Bebida
+                            </button>
+                        </div>
+                
                     </div>
-                 </div>
+                </div>
 
                  <div class="tab-pane fade" id="mesas">
                     <div class="card p-4 border-0 shadow-sm rounded-4">
@@ -156,6 +177,131 @@
                   </div>
     </main>
 </div>
+
+<div class="modal fade" id="modalTipoBebida" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content rounded-4 shadow">
+      <div class="modal-header">
+        <h5 class="modal-title fw-bold">🏷️ Nuevo Tipo de Bebida</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body">
+        <div class="mb-3">
+          <label class="form-label">Nombre del tipo</label>
+          <input type="text" id="nombreTipoBebida" class="form-control" placeholder="Ej. Refresco, Cerveza">
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button class="btn btn-danger" id="guardarTipoBebida">Guardar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+<div class="modal fade" id="modalAgregarBebida" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title fw-bold">➕ Nueva Bebida</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <form id="formNuevaBebida">
+          <div class="mb-3">
+            <label class="form-label">Nombre del Producto</label>
+            <input type="text" id="nombreBebida" class="form-control" placeholder="Ej. Coca Cola 600ml">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Tipo de Bebida</label>
+            <select id="selectTipoBebida" class="form-select">
+              <option value="">Selecciona un tipo...</option>
+              </select>
+          </div>
+          <div class="row">
+            <div class="col-6 mb-3">
+              <label class="form-label">Precio</label>
+              <input type="number" id="precioBebida" class="form-control" step="0.01">
+            </div>
+            <div class="col-6 mb-3">
+              <label class="form-label">Stock</label>
+              <input type="number" id="stockBebida" class="form-control">
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button class="btn btn-primary" id="btnGuardarBebidaConfirmar">Guardar Producto</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+<div class="modal fade" id="modalEditarBebida" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-dark text-white">
+        <h5 class="modal-title">✏️ Editar Bebida</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <form id="formEditarBebida">
+          <input type="hidden" id="editBebidaId">
+          <div class="mb-3">
+            <label class="form-label">Nombre</label>
+            <input type="text" id="editNombreBebida" class="form-control">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Tipo</label>
+            <select id="editSelectTipoBebida" class="form-select"></select>
+          </div>
+          <div class="row">
+            <div class="col-6 mb-3">
+              <label class="form-label">Precio</label>
+              <input type="number" id="editPrecioBebida" class="form-control" step="0.01">
+            </div>
+            <div class="col-6 mb-3">
+              <label class="form-label">Stock</label>
+              <input type="number" id="editStockBebida" class="form-control">
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline-danger" id="btnEliminarBebida">Eliminar</button>
+        <button class="btn btn-primary" id="btnActualizarBebida">Guardar Cambios</button>
+      </div>
+    </div>
+  </div>
+</div><div class="modal fade" id="modalConfirmarEliminar" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-sm">
+    <div class="modal-content border-0 shadow-lg">
+      <div class="modal-header bg-danger text-white border-0">
+        <h5 class="modal-title fw-bold">⚠️ ¿Eliminar?</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body text-center py-4">
+        <p class="mb-0">¿Estás seguro de eliminar <br><strong id="nombreBebidaAEliminar" class="text-danger"></strong>?</p>
+        <input type="hidden" id="idBebidaAEliminar">
+      </div>
+      <div class="modal-footer border-0 justify-content-center">
+        <button type="button" class="btn btn-light px-4" data-bs-dismiss="modal">No, cancelar</button>
+        <button type="button" class="btn btn-danger px-4" id="btnConfirmarBorradoReal">Sí, eliminar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script type="module" src="js/admin.js"></script>
