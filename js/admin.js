@@ -964,9 +964,9 @@ async function mostrarVentasPorTipo(pedidos) {
     const contenedorStats = document.getElementById("contenedorStatsCategorias");
     const fechaSeleccionada = document.getElementById("fechaVentas").value;
 
-    // 1. LIMPIEZA INICIAL: Borramos pedidos y el resumen viejo para que no se acumule
     if (!listaVentas) return;
     listaVentas.innerHTML = "";
+    
     const resumenViejo = document.getElementById("resumen-final-ventas");
     if (resumenViejo) resumenViejo.remove();
 
@@ -981,7 +981,6 @@ async function mostrarVentasPorTipo(pedidos) {
         const ventasPorTipo = {};
         let productoMasVendido = { nombre: "Ninguno", cantidad: 0 };
 
-        // 2. RENDERIZAR PEDIDOS
         pedidos.forEach(pedido => {
             const cardPedido = document.createElement("div");
             cardPedido.className = "pedido-card shadow-sm";
@@ -1011,54 +1010,63 @@ async function mostrarVentasPorTipo(pedidos) {
                 });
             }
 
+            // --- RENDERIZADO DEL HTML ---
             cardPedido.innerHTML = `
                 <div class="d-flex justify-content-between border-bottom pb-2 mb-2">
-                    <span class="fw-bold text-danger">Mesa ${pedido.mesa || 'S/M'}</span>
-                    <span class="badge bg-light text-dark border">${pedido.hora || '--:--'}</span>
+                    <span class="fw-bold text-danger">Mesa ${pedido.mesaId || pedido.mesa || 'S/M'}</span>
+                    <span class="badge bg-light text-dark border">${pedido.fechaCompleta?.split(',')[1] || pedido.hora || '--:--'}</span>
                 </div>
                 <h6 class="fw-bold text-uppercase small mb-2">${pedido.cliente || 'Cliente'}</h6>
                 <div class="productos-scroll mb-3" style="max-height: 100px; overflow-y: auto;">
                     ${itemsHTML}
                 </div>
-                <div class="d-flex justify-content-between align-items-center mt-auto pt-2 border-top">
+                <div class="d-flex justify-content-between align-items-center mt-auto pt-2 border-top mb-3">
                     <span class="fw-bold">TOTAL:</span>
                     <span class="fw-bold text-success fs-5">$${pedido.total?.toFixed(2) || '0.00'}</span>
                 </div>
+                <button class="btn btn-dark btn-sm w-100 rounded-pill fw-bold btn-imprimir-ticket">
+                    🖨️ Ticket Venta
+                </button>
             `;
+
+            // --- VINCULACIÓN DEL EVENTO (Aquí no se rompe) ---
+            const btnTicket = cardPedido.querySelector(".btn-imprimir-ticket");
+            btnTicket.addEventListener("click", () => {
+                if (typeof imprimirTicket === "function") {
+                    imprimirTicket(pedido);
+                } else {
+                    console.error("La función imprimirTicket no está definida");
+                }
+            });
+
             listaVentas.appendChild(cardPedido);
         });
 
-        // 3. RENDERIZAR STATS (Tarjetas pequeñas)
+        // 3. RENDERIZAR STATS
         if (contenedorStats) {
-            // Dentro de mostrarVentasPorTipo...
-let statsHTML = "";
-Object.keys(ventasPorTipo).forEach(tipo => {
-    // Convertimos los datos a string para pasarlos a la función de impresión
-    const datosCategoria = JSON.stringify(ventasPorTipo[tipo]);
-    
-    statsHTML += `
-        <div class="col-md-3">
-            <div class="stats-card-mini h-100 shadow-sm border-0 p-3">
-                <small class="text-muted fw-bold text-uppercase">${tipo}</small>
-                <h3 class="text-danger fw-bold my-1">$${ventasPorTipo[tipo].total.toFixed(2)}</h3>
-                <p class="small text-secondary mb-2">${ventasPorTipo[tipo].cantidad} unidades</p>
-                
-                <button class="btn btn-outline-danger btn-sm w-100 rounded-pill fw-bold" 
-                    onclick='imprimirTicketCategoria("${tipo}", ${datosCategoria})'>
-                    🖨️ Imprimir ${tipo}
-                </button>
-            </div>
-        </div>
-    `;
-});
-contenedorStats.innerHTML = statsHTML;
+            let statsHTML = "";
+            Object.keys(ventasPorTipo).forEach(tipo => {
+                const datosCategoria = JSON.stringify(ventasPorTipo[tipo]).replace(/'/g, "&apos;");
+                statsHTML += `
+                    <div class="col-md-3">
+                        <div class="stats-card-mini h-100 shadow-sm border-0 p-3">
+                            <small class="text-muted fw-bold text-uppercase">${tipo}</small>
+                            <h3 class="text-danger fw-bold my-1">$${ventasPorTipo[tipo].total.toFixed(2)}</h3>
+                            <p class="small text-secondary mb-2">${ventasPorTipo[tipo].cantidad} unidades</p>
+                            <button class="btn btn-outline-danger btn-sm w-100 rounded-pill fw-bold" 
+                                onclick='imprimirTicketCategoria("${tipo}", ${datosCategoria})'>
+                                🖨️ Imprimir ${tipo}
+                            </button>
+                        </div>
+                    </div>`;
+            });
+            contenedorStats.innerHTML = statsHTML;
         }
 
-        // 4. ACTUALIZAR GRÁFICAS
         renderizarGraficaCategorias(ventasPorTipo);
         renderizarGraficaTopProductos(ventasPorTipo);
 
-        // 5. INYECTAR RESUMEN FINAL (Fuera del grid de pedidos)
+        // 5. INYECTAR RESUMEN FINAL
         const resumenFinalHTML = `
             <div id="resumen-final-ventas" class="col-12 mt-4 mb-5">
                 <div class="card bg-dark text-white p-4 rounded-4 shadow border-0">
@@ -1075,17 +1083,13 @@ contenedorStats.innerHTML = statsHTML;
                         </div>
                     </div>
                 </div>
-            </div>
-        `;
-        
-        // Lo insertamos después de la lista de pedidos
+            </div>`;
         listaVentas.insertAdjacentHTML('afterend', resumenFinalHTML);
 
     } catch (error) {
         console.error("Error en estadísticas:", error);
     }
 }
-
 // 1. Al final de tu archivo admin.js, agrega la función así:
 window.imprimirTicketCategoria = function(tipo, datos) {
     const fechaSeleccionada = document.getElementById("fechaVentas").value || "Sin fecha";
