@@ -39,6 +39,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     const botonCancelar = document.getElementById("cancelarPedido");
     const contenidoModalPedido = document.getElementById("contenidoModalPedido");//este
     const botonConfirmar = document.getElementById("confirmarPedido");
+    const textoSeleccionMesa = document.getElementById("txtSeleccionMesa");
+    const collapseMesas = document.getElementById("collapseMesas");
+    const botonesTabsMesera = document.querySelectorAll('#meseraTabs [data-bs-toggle="tab"]');
  
     const mesaEditando = document.getElementById("mesaEditando");
      const inputBusqueda = document.getElementById("buscadorProductos");
@@ -79,6 +82,12 @@ const listasProductos = [
 
       cargarMesas();
        cargarMenu();
+
+    botonesTabsMesera.forEach((tabBtn) => {
+        tabBtn.addEventListener("shown.bs.tab", () => {
+            window.scrollTo({ top: 0, behavior: "smooth" });
+        });
+    });
        
 
 
@@ -810,6 +819,7 @@ const productosFormateados = Object.values(productosMap);
     function limpiarPedido() {
         pedidoActual = { fecha: new Date().toISOString().split("T")[0], mesa: null, mesera: "", items: [] };
         document.getElementById("mesaSeleccionada").textContent = "";
+        if (textoSeleccionMesa) textoSeleccionMesa.textContent = "Selecciona una mesa";
         mostrarPedido();
         guardarPedidoLocal();
     }
@@ -865,7 +875,13 @@ const productosFormateados = Object.values(productosMap);
         }
         pedidoActual.mesa = numero;
         document.getElementById("mesaSeleccionada").textContent = `Mesa ${numero}`;
+        if (textoSeleccionMesa) textoSeleccionMesa.textContent = `Mesa ${numero} seleccionada`;
+        if (collapseMesas) {
+            const collapseInstance = bootstrap.Collapse.getOrCreateInstance(collapseMesas, { toggle: false });
+            collapseInstance.hide();
+        }
         document.getElementById("pedidoContenido").classList.remove("d-none");
+        document.getElementById("buscadorProductos")?.focus();
         guardarPedidoLocal();
     }
 

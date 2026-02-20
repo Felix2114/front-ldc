@@ -26,7 +26,7 @@
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
-<body class="bg-light">
+<body class="bg-light mesera-app">
 
     <div id="overlay">
         <div id="overlayContent" class="text-center">
@@ -35,7 +35,7 @@
         </div>
     </div>
 
-    <div class="container py-3 pb-5">
+    <div class="container py-3 pb-5 app-content">
         <div class="d-flex justify-content-between align-items-center mb-3 px-2">
             <div>
                 <h4 class="fw-bold m-0 text-dark">Los Dos Carnales</h4>
@@ -43,18 +43,6 @@
             </div>
             <span id="fechaActual" class="badge bg-white text-dark shadow-sm border"></span>
         </div>
-
-        <ul class="nav nav-pills nav-fill mb-4 p-1 bg-white rounded-pill shadow-sm border" id="meseraTabs">
-            <li class="nav-item">
-                <button class="nav-link active rounded-pill" data-bs-toggle="tab" data-bs-target="#nuevaOrden">Nueva</button>
-            </li>
-            <li class="nav-item">
-                <button class="nav-link rounded-pill" data-bs-toggle="tab" data-bs-target="#ordenesPendientes">Pendientes</button>
-            </li>
-            <li class="nav-item">
-                <button class="nav-link rounded-pill" data-bs-toggle="tab" data-bs-target="#historial">Historial</button>
-            </li>
-        </ul>
 
         <div class="tab-content">
             <div class="tab-pane fade show active" id="nuevaOrden">
@@ -66,8 +54,7 @@
                             <select class="form-select form-select-lg bg-light border-0 mb-3" id="nombreMesera">
                                 <option value="">Selecciona tu nombre...</option>
                                 <option value="Tete">Tete</option>
-                                <option value="Naye">Naye</option>
-                                <option value="Mon">Mon</option>
+                                <option value="Any">Any</option>
                                 <option value="Caja">Caja</option>
                             </select>
 
@@ -156,6 +143,29 @@
             </div>
         </div>
     </div>
+
+    <nav class="bottom-tabs" aria-label="Navegación principal mesera">
+        <ul class="nav nav-pills nav-fill" id="meseraTabs">
+            <li class="nav-item">
+                <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#nuevaOrden">
+                    <span class="tab-icon">📝</span>
+                    <span class="tab-label">Nueva</span>
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#ordenesPendientes">
+                    <span class="tab-icon">⏳</span>
+                    <span class="tab-label">Pendientes</span>
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#historial">
+                    <span class="tab-icon">📜</span>
+                    <span class="tab-label">Historial</span>
+                </button>
+            </li>
+        </ul>
+    </nav>
 
     <div class="modal fade" id="modalPedido" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">

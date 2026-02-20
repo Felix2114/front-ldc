@@ -1148,6 +1148,148 @@ window.imprimirTicketCategoria = function(tipo, datos) {
     `);
 };
 
+async function imprimirReporteMensualPro() {
+    const fechaInput = document.getElementById("fechaVentas").value;
+    if (!fechaInput) return alert("Selecciona una fecha del mes que quieres reportar.");
+
+    const [year, month] = fechaInput.split("-");
+    const mesNombres = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+    
+    // Mostramos un mensaje de carga porque esto puede tardar unos segundos
+    const btn = document.getElementById("btnReporteMensual");
+    const originalText = btn.innerHTML;
+    btn.innerHTML = "⏳ Procesando...";
+    btn.disabled = true;
+
+    try {
+        const diasDelMes = new Date(year, month, 0).getDate(); // 28, 30 o 31
+        let promesas = [];
+
+        // 1. Creamos una lista de peticiones para cada día del mes
+        for (let dia = 1; dia <= diasDelMes; dia++) {
+            const diaFormateado = String(dia).padStart(2, '0');
+            const fechaConsulta = `${year}-${month}-${diaFormateado}`;
+            promesas.push(fetch(`https://api-ldc.onrender.com/pedidos/guardados/${fechaConsulta}`).then(r => r.ok ? r.json() : []));
+        }
+
+        // 2. Ejecutamos todas las peticiones al mismo tiempo (más rápido)
+        const resultados = await Promise.all(promesas);
+        const pedidosDelMes = resultados.flat(); // Unimos todos los arrays en uno solo
+
+        if (pedidosDelMes.length === 0) {
+            alert(`No hay ventas guardadas en ${mesNombres[parseInt(month)-1]}.`);
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+            return;
+        }
+
+        // 3. --- PROCESAMIENTO DE DATOS ---
+        let stats = {
+            totalVentas: 0,
+            metodos: { Efectivo: 0, Tarjeta: 0, Pendiente: 0 },
+            meseras: {},
+            productos: {},
+            descuentosTotal: 0
+        };
+
+        pedidosDelMes.forEach(p => {
+            const monto = p.total || 0;
+            stats.totalVentas += monto;
+            stats.metodos[p.metodo_Pago || "Pendiente"] += monto;
+            
+            const m = p.mesera || "Sin Asignar";
+            stats.meseras[m] = (stats.meseras[m] || 0) + monto;
+
+            p.productos.forEach(prod => {
+                stats.productos[prod.nombre] = (stats.productos[prod.nombre] || 0) + (prod.cantidad || 1);
+            });
+            if (p.montoDescuento) stats.descuentosTotal += p.montoDescuento;
+        });
+
+        const topProductos = Object.entries(stats.productos)
+            .sort((a, b) => b[1] - a[1]).slice(0, 5);
+
+        // 4. --- TICKET PRO ---
+        // --- DISEÑO DEL REPORTE ---
+        const ventana = window.open('', '', 'width=450,height=800');
+        
+        // 🔥 VALIDACIÓN DE SEGURIDAD: Si la ventana fue bloqueada por el navegador
+        if (!ventana) {
+            alert("⚠️ El navegador bloqueó la ventana del reporte. Por favor, permite los 'pop-ups' para este sitio.");
+            return;
+        }
+
+        // Si llegamos aquí, la ventana existe y podemos escribir
+        ventana.document.write(`
+            <html>
+                <head>
+                    <title>Reporte Mensual LDC</title>
+                    <style>
+                        body { font-family: 'Courier New', monospace; padding: 20px; font-size: 14px; }
+                        .header { text-align: center; border-bottom: 2px solid #dc3545; padding-bottom: 10px; }
+                        .total-card { background: #212529; color: white; padding: 15px; text-align: center; border-radius: 10px; margin: 20px 0; }
+                        .stat-row { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed #ccc; }
+                        .footer { margin-top: 30px; text-align: center; font-size: 11px; color: #666; }
+                        h4 { color: #dc3545; margin-bottom: 10px; border-left: 4px solid #dc3545; padding-left: 10px; text-transform: uppercase; }
+                    </style>
+                </head>
+                <body>
+                    <div class="header">
+                        <h2 style="margin:0;">LOS DOS CARNALES</h2>
+                        <p style="margin:0;">REPORTE MENSUAL PRO</p>
+                        <strong>${mesNombres[parseInt(month)-1].toUpperCase()} ${year}</strong>
+                    </div>
+
+                    <div class="total-card">
+                        <small>VENTA TOTAL ACUMULADA</small>
+                        <h2 style="margin:0;">$${stats.totalVentas.toLocaleString('es-MX', {minimumFractionDigits: 2})}</h2>
+                    </div>
+
+                    <h4>💰 FLUJO DE CAJA</h4>
+                    <div class="stat-row"><span>Efectivo:</span> <span>$${stats.metodos.Efectivo.toFixed(2)}</span></div>
+                    <div class="stat-row"><span>Tarjeta:</span> <span>$${stats.metodos.Tarjeta.toFixed(2)}</span></div>
+                    <div class="stat-row"><span>Pendientes:</span> <span>$${stats.metodos.Pendiente.toFixed(2)}</span></div>
+
+                    <br>
+                    <h4>🏆 TOP 5 PRODUCTOS</h4>
+                    ${topProductos.length > 0 ? 
+                        topProductos.map(([nom, cant]) => `<div class="stat-row"><span>${nom}</span> <span>${cant} pz</span></div>`).join('') 
+                        : "No hay datos de productos"}
+
+                    <br>
+                    <h4>👩‍🍳 VENTAS POR STAFF</h4>
+                    ${Object.entries(stats.meseras).map(([nom, tot]) => `<div class="stat-row"><span>${nom}</span> <span>$${tot.toFixed(2)}</span></div>`).join('')}
+
+                    <div class="footer">
+                        <p>Ticket Promedio: $${(stats.totalVentas / pedidosDelMes.length).toFixed(2)}</p>
+                        <p>Total Descuentos: -$${stats.descuentosTotal.toFixed(2)}</p>
+                        <p>#somosLosDosCarnales👬</p>
+                    </div>
+                    <script>
+                        window.onload = function() { 
+                            window.print(); 
+                            setTimeout(() => window.close(), 1000); 
+                        }
+                    </script>
+                </body>
+            </html>
+        `);
+        ventana.document.close(); // Importante cerrar el stream de escritura
+
+    } catch (e) {
+        console.error("Error en reporte:", e);
+        alert("Ocurrió un error al procesar los datos.");
+    } finally {
+        if (btn) {
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        }
+    }
+}
+
+// NO OLVIDES ESTO AL FINAL DE TU ADMIN.JS
+window.imprimirReporteMensualPro = imprimirReporteMensualPro;
+
 
 /**
  * Función de Impresión Tamaño Carta (PDF)
@@ -1487,3 +1629,4 @@ document.addEventListener("focusout", (e) => {
     }
     });
 });
+
