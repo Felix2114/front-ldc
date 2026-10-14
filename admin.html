@@ -12,7 +12,8 @@
 <body class="bg-light">
 
 <div class="d-flex" id="wrapper">
-    <nav id="sidebar" class="bg-dark text-white shadow">
+    <button id="sidebarBackdrop" class="sidebar-backdrop" type="button" aria-label="Cerrar menú"></button>
+    <nav id="sidebar" class="bg-dark text-white shadow" aria-label="Navegación de administración">
         <div class="sidebar-header p-4 text-center border-bottom border-secondary">
             <h4 class="fw-bold m-0 text-danger">LDC</h4>
             <p class="small text-muted mb-0">Administración</p>
@@ -23,6 +24,7 @@
             <button class="list-group-item list-group-item-action bg-dark text-white border-0 py-3" data-bs-toggle="tab" data-bs-target="#inventario">Inventario</button>
             <button class="list-group-item list-group-item-action bg-dark text-white border-0 py-3" data-bs-toggle="tab" data-bs-target="#menu"> Menú</button>
             <button class="list-group-item list-group-item-action bg-dark text-white border-0 py-3" data-bs-toggle="tab" data-bs-target="#mesas"> Mesas</button>
+            <button class="list-group-item list-group-item-action bg-dark text-white border-0 py-3" data-bs-toggle="tab" data-bs-target="#meseras"> Meseras</button>
             <button class="list-group-item list-group-item-action bg-dark text-white border-0 py-3" data-bs-toggle="tab" data-bs-target="#confirmarPedidos"> Confirmar Pedidos</button>
             <div class="mt-4 px-3">
                 <a href="cocina.html" target="_blank" class="btn btn-outline-danger w-100 fw-bold py-2">🔥 Ver Cocina</a>
@@ -30,23 +32,29 @@
         </div>
     </nav>
 
-    <main id="content" class="w-100 vh-100 overflow-auto">
-        <header class="navbar navbar-light bg-white sticky-top border-bottom px-4 py-3">
-            <h5 class="m-0 fw-bold text-secondary">Dashboard / Los Dos Carnales</h5>
+    <main id="content" class="w-100 vh-100 overflow-auto admin-main-content">
+        <header class="navbar navbar-light bg-white sticky-top border-bottom px-4 py-3 admin-topbar">
+            <button id="btnMenuAdmin" class="admin-menu-toggle" type="button" aria-label="Abrir menú" aria-controls="sidebar" aria-expanded="false">
+                <span aria-hidden="true">☰</span>
+            </button>
+            <div>
+                <h5 class="m-0 fw-bold text-secondary">Dashboard / Los Dos Carnales</h5>
+                <small class="admin-mobile-caption">Administración</small>
+            </div>
         </header>
 
-        <div class="container-fluid p-4">
+        <div class="container-fluid p-4 admin-page">
             <div class="tab-content mt-3">
 
                 <div class="tab-pane fade show active" id="ventas">
                     <div class="card border-0 shadow-sm p-3 rounded-4 bg-white mb-4">
-                        <div class="d-flex justify-content-between align-items-center">
+                        <div class="sales-summary-bar">
     <div>
         <small class="text-muted fw-bold text-uppercase">Ventas del Día</small>
         <h2 class="fw-bold m-0 text-danger">$<span id="totalVentas">0.00</span></h2>
     </div>
-    <div class="d-flex gap-2 w-50 justify-content-end"> 
-    <input type="date" class="form-control w-50 shadow-sm" id="fechaVentas">
+    <div class="sales-actions">
+    <input type="date" class="form-control shadow-sm" id="fechaVentas">
     <button class="btn btn-dark shadow-sm fw-bold" id="btnReporteMensual" onclick="imprimirReporteMensualPro()">
         📊 Reporte Mensual
     </button>
@@ -143,7 +151,7 @@
             </tbody>
     </table>
 </div>
-                        <div class="d-flex gap-2">
+                        <div class="d-flex gap-2 inventory-actions">
                             <button class="btn btn-primary" id="agregarBebida">➕ Agregar Bebida</button>
                             <button class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#modalTipoBebida">
                                 🏷️ Tipos de Bebida
@@ -154,15 +162,47 @@
                 </div>
 
                  <div class="tab-pane fade" id="mesas">
-                    <div class="card p-4 border-0 shadow-sm rounded-4">
-                        <h4 class="fw-bold mb-4">🪑 Gestión de Mesas</h4>
-                        <div class="d-flex gap-2 mb-3">
-                            <input type="number" class="form-control w-25" id="numMesas">
-                            <button class="btn btn-danger" id="btnAgregarMesas">Generar</button>
+                    <section class="card p-4 border-0 shadow-sm rounded-4 mesas-panel">
+                        <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
+                            <div>
+                                <p class="eyebrow mb-1">Operación del salón</p>
+                                <h4 class="fw-bold mb-1">Gestión de mesas</h4>
+                                <p class="text-muted mb-0">Consulta la disponibilidad antes de abrir una orden.</p>
+                            </div>
+                            <div class="mesa-summary" aria-label="Resumen de mesas">
+                                <span><strong id="totalMesas">0</strong> total</span>
+                                <span class="summary-available"><strong id="mesasDisponibles">0</strong> libres</span>
+                                <span class="summary-busy"><strong id="mesasOcupadas">0</strong> ocupadas</span>
+                            </div>
                         </div>
-                        <div id="contenedorMesas" class="d-flex flex-wrap gap-2"></div>
-                        <table class="d-none"><tbody id="listaMesas"></tbody></table>
-                    </div>
+                        <div class="mesa-create-row mb-4">
+                            <div>
+                                <label for="numMesas" class="form-label fw-semibold mb-1">Agregar mesas consecutivas</label>
+                                <p class="small text-muted mb-0">Se numeran automáticamente a partir de la última mesa.</p>
+                            </div>
+                            <div class="input-group mesa-create-control">
+                                <input type="number" min="1" step="1" class="form-control" id="numMesas" placeholder="Cantidad" aria-label="Cantidad de mesas a agregar">
+                                <button class="btn btn-danger" id="btnAgregarMesas">Agregar</button>
+                            </div>
+                        </div>
+                        <div id="contenedorMesas" class="mesa-admin-grid" aria-live="polite"></div>
+                    </section>
+                 </div>
+
+                 <div class="tab-pane fade" id="meseras">
+                    <section class="card p-4 border-0 shadow-sm rounded-4 meseras-panel">
+                        <div class="mb-4">
+                            <p class="eyebrow mb-1">Personal de piso</p>
+                            <h4 class="fw-bold mb-1">Meseras</h4>
+                            <p class="text-muted mb-0">Los nombres registrados aquí aparecerán en la pantalla de pedidos.</p>
+                        </div>
+                        <form id="formNuevaMesera" class="mesera-create-row mb-4">
+                            <label for="nombreNuevaMesera" class="visually-hidden">Nombre de la mesera</label>
+                            <input type="text" class="form-control form-control-lg" id="nombreNuevaMesera" maxlength="60" autocomplete="off" placeholder="Ej. Ana Martínez" required>
+                            <button class="btn btn-danger px-4" type="submit">Agregar mesera</button>
+                        </form>
+                        <div id="listaMeseras" class="meseras-list" aria-live="polite"></div>
+                    </section>
                  </div>
 
                  
@@ -170,8 +210,8 @@
                  <div class="tab-pane fade" id="confirmarPedidos">
                     <div class="card p-4 border-0 shadow-sm rounded-4">
                         <h4 class="fw-bold mb-4">✅ Confirmar Pedidos</h4>
-                        <div class="d-flex gap-2 mb-3">
-                            <input type="date" id="fechaConfirmar" class="form-control w-25">
+                        <div class="d-flex gap-2 mb-3 confirm-toolbar">
+                            <input type="date" id="fechaConfirmar" class="form-control">
                             <button class="btn btn-success" id="btnCargarPedidos">Cargar</button>
                         </div>
                         <div id="listaPedidosPorConfirmar"></div>

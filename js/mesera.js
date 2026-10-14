@@ -40,7 +40,11 @@ document.addEventListener("DOMContentLoaded", async () => {
     const contenidoModalPedido = document.getElementById("contenidoModalPedido");//este
     const botonConfirmar = document.getElementById("confirmarPedido");
     const textoSeleccionMesa = document.getElementById("txtSeleccionMesa");
-    const collapseMesas = document.getElementById("collapseMesas");
+    const selectMesera = document.getElementById("nombreMesera");
+    const resumenMesas = document.getElementById("resumenMesas");
+    const botonActualizarMesas = document.getElementById("btnActualizarMesas");
+    const modalSelectorMesas = document.getElementById("modalSelectorMesas");
+    const instanciaModalMesas = bootstrap.Modal.getOrCreateInstance(modalSelectorMesas);
     const botonesTabsMesera = document.querySelectorAll('#meseraTabs [data-bs-toggle="tab"]');
  
     const mesaEditando = document.getElementById("mesaEditando");
@@ -80,8 +84,12 @@ const listasProductos = [
         items: []
      };
 
+      cargarMeseras();
       cargarMesas();
-       cargarMenu();
+      cargarMenu();
+
+    botonActualizarMesas.addEventListener("click", cargarMesas);
+    modalSelectorMesas.addEventListener("show.bs.modal", cargarMesas);
 
     botonesTabsMesera.forEach((tabBtn) => {
         tabBtn.addEventListener("shown.bs.tab", () => {
@@ -819,54 +827,91 @@ const productosFormateados = Object.values(productosMap);
     function limpiarPedido() {
         pedidoActual = { fecha: new Date().toISOString().split("T")[0], mesa: null, mesera: "", items: [] };
         document.getElementById("mesaSeleccionada").textContent = "";
-        if (textoSeleccionMesa) textoSeleccionMesa.textContent = "Selecciona una mesa";
+        if (textoSeleccionMesa) textoSeleccionMesa.textContent = "Elegir mesa disponible";
         mostrarPedido();
         guardarPedidoLocal();
     }
        
    
-    //CARGAR MESAS
-   async function cargarMesas() {
-    try {
-        const response = await fetch(`${apiURL}/mesas`);
-        const mesas = await response.json();
+    async function cargarMeseras() {
+        const seleccionActual = selectMesera.value;
+        selectMesera.disabled = true;
+        selectMesera.innerHTML = '<option value="">Cargando meseras...</option>';
 
-        // Limpiar el contenedor de mesas
-        mesasContainer.innerHTML = "";
+        try {
+            const respuesta = await fetch(`${apiURL}/meseras`);
+            const meseras = await respuesta.json().catch(() => ([]));
+            if (!respuesta.ok || !Array.isArray(meseras)) {
+                throw new Error("No fue posible obtener el personal.");
+            }
 
-        // Filtrar y ordenar las mesas disponibles
-        const mesasDisponibles = mesas
-            .filter(m => m.disponible)
-            .sort((a, b) => a.numero - b.numero);
+            const fragmento = document.createDocumentFragment();
+            const opcionInicial = new Option("Selecciona tu nombre...", "");
+            fragmento.appendChild(opcionInicial);
 
-        if (mesasDisponibles.length === 0) {
-            mesasContainer.innerHTML = `
-                <div class="alert alert-warning" role="alert">
-                    No hay mesas disponibles en este momento. 🪑⏳
-                </div>`;
-            return;
+            meseras
+                .sort((a, b) => (a.nombre || "").localeCompare(b.nombre || "", "es"))
+                .forEach((mesera) => {
+                    fragmento.appendChild(new Option(mesera.nombre, mesera.nombre));
+                });
+
+            selectMesera.replaceChildren(fragmento);
+            selectMesera.value = meseras.some((mesera) => mesera.nombre === seleccionActual)
+                ? seleccionActual
+                : "";
+            selectMesera.disabled = meseras.length === 0;
+            if (!meseras.length) {
+                selectMesera.innerHTML = '<option value="">No hay meseras registradas</option>';
+            }
+        } catch (error) {
+            console.error("⚠️ Error al cargar meseras:", error);
+            selectMesera.innerHTML = '<option value="">No se pudo cargar el personal</option>';
+            selectMesera.disabled = true;
         }
-
-        // Crear botones para cada mesa disponible
-        mesasDisponibles.forEach(mesa => {
-            const btnMesa = document.createElement("button");
-            btnMesa.className = "mesa-btn m-2"; // Usa tu clase personalizada
-            btnMesa.textContent = `Mesa ${mesa.numero}`;
-            btnMesa.setAttribute("aria-label", `Seleccionar mesa ${mesa.numero}`);
-            btnMesa.onclick = () => seleccionarMesa(mesa.numero);
-            mesasContainer.appendChild(btnMesa);
-        });
-
-    } catch (error) {
-        console.error("⚠️ Error al cargar las mesas:", error);
-        mesasContainer.innerHTML = `
-            <div class="alert alert-danger" role="alert">
-                Ocurrió un error al cargar las mesas. Intenta nuevamente más tarde. ❌
-            </div>`;
     }
-}
 
+    // Cargar solamente mesas disponibles en una cuadrícula táctil.
+    async function cargarMesas() {
+        mesasContainer.innerHTML = '<div class="mesa-loading">Actualizando mesas...</div>';
+        resumenMesas.textContent = "Consultando disponibilidad...";
 
+        try {
+            const response = await fetch(`${apiURL}/mesas`);
+            const mesas = await response.json().catch(() => ([]));
+            if (!response.ok || !Array.isArray(mesas)) {
+                throw new Error("No fue posible obtener las mesas.");
+            }
+
+            const mesasDisponibles = mesas
+                .filter((mesa) => mesa.disponible === true)
+                .sort((a, b) => Number(a.numero) - Number(b.numero));
+            resumenMesas.textContent = `${mesasDisponibles.length} mesa${mesasDisponibles.length === 1 ? "" : "s"} disponible${mesasDisponibles.length === 1 ? "" : "s"}`;
+            mesasContainer.innerHTML = "";
+
+            if (!mesasDisponibles.length) {
+                mesasContainer.innerHTML = '<div class="mesa-empty">No hay mesas libres en este momento.</div>';
+                return;
+            }
+
+            const fragmento = document.createDocumentFragment();
+            mesasDisponibles.forEach((mesa) => {
+                const numero = Number(mesa.numero);
+                const btnMesa = document.createElement("button");
+                btnMesa.type = "button";
+                btnMesa.className = "mesa-btn mesa-tile";
+                btnMesa.setAttribute("aria-label", `Seleccionar mesa ${numero}`);
+                btnMesa.innerHTML = '<span class="mesa-tile-label">Mesa</span><strong></strong><span class="mesa-tile-status">Disponible</span>';
+                btnMesa.querySelector("strong").textContent = String(numero).padStart(2, "0");
+                btnMesa.addEventListener("click", () => seleccionarMesa(numero));
+                fragmento.appendChild(btnMesa);
+            });
+            mesasContainer.appendChild(fragmento);
+        } catch (error) {
+            console.error("⚠️ Error al cargar las mesas:", error);
+            resumenMesas.textContent = "No se pudo actualizar la disponibilidad";
+            mesasContainer.innerHTML = '<div class="mesa-empty mesa-error">Ocurrió un error al cargar las mesas. Intenta actualizar.</div>';
+        }
+    }
 
     function seleccionarMesa(numero) {
         if (!numero) {
@@ -876,10 +921,7 @@ const productosFormateados = Object.values(productosMap);
         pedidoActual.mesa = numero;
         document.getElementById("mesaSeleccionada").textContent = `Mesa ${numero}`;
         if (textoSeleccionMesa) textoSeleccionMesa.textContent = `Mesa ${numero} seleccionada`;
-        if (collapseMesas) {
-            const collapseInstance = bootstrap.Collapse.getOrCreateInstance(collapseMesas, { toggle: false });
-            collapseInstance.hide();
-        }
+        instanciaModalMesas.hide();
         document.getElementById("pedidoContenido").classList.remove("d-none");
         document.getElementById("buscadorProductos")?.focus();
         guardarPedidoLocal();
@@ -990,10 +1032,17 @@ async function enviarPedido(pedido) {
             return;
         }
 
+        if (!selectMesera.value) {
+            overlay.style.display = "none";
+            alert("Selecciona quién atiende antes de enviar el pedido.");
+            selectMesera.focus();
+            return;
+        }
+
         // --- CONSTRUCCIÓN DEL PAYLOAD CORREGIDA ---
         const payload = {
             mesaId: pedido.mesa,
-            mesera: document.getElementById("nombreMesera").value || "Anónimo",
+            mesera: selectMesera.value,
             cliente: document.getElementById("nombreCliente").value || "",
             nota: document.getElementById("notaPedido").value || "",
             productos: pedido.items.map(item => {

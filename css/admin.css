@@ -2,6 +2,12 @@
 body, html { height: 100%; overflow: hidden; }
 #wrapper { height: 100vh; width: 100vw; display: flex; }
 
+.admin-menu-toggle,
+.sidebar-backdrop,
+.admin-mobile-caption {
+    display: none;
+}
+
 /* SIDEBAR FIJO */
 #sidebar {
     width: 280px;
@@ -14,6 +20,7 @@ body, html { height: 100%; overflow: hidden; }
 /* CONTENIDO CON SCROLL PROPIO */
 #content {
     background-color: #f8f9fa;
+    min-width: 0;
 }
 
 /* CLASES ORIGINALES RECONSTRUIDAS PARA TU JS */
@@ -71,13 +78,6 @@ body, html { height: 100%; overflow: hidden; }
     background-color: #dc3545;
     box-shadow: 0 4px 10px rgba(220, 53, 69, 0.2);
 }
-
-/* RESPONSIVE */
-@media (max-width: 992px) {
-    #sidebar { display: none; } /* En tablets/celulares podrías usar un botón de menú si gustas */
-}
-
-
 
 /* CONTENEDOR DE LA LISTA DE VENTAS */
 #listaVentas {
@@ -175,6 +175,198 @@ body, html { height: 100%; overflow: hidden; }
 @media (max-width: 600px) {
     #listaVentas {
         grid-template-columns: 1fr;
+    }
+}
+
+/* MESAS Y MESERAS */
+.mesas-panel,
+.meseras-panel {
+    background: #fffdf9;
+}
+
+.eyebrow {
+    color: #a52a2a;
+    font-size: 0.7rem;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+}
+
+.mesa-summary {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.mesa-summary span {
+    background: #f5f1eb;
+    border-radius: 999px;
+    color: #665e57;
+    font-size: 0.82rem;
+    padding: 8px 12px;
+}
+
+.mesa-summary strong {
+    color: #27211d;
+}
+
+.mesa-summary .summary-available {
+    background: #e5f5ec;
+    color: #176b42;
+}
+
+.mesa-summary .summary-busy {
+    background: #fde9e7;
+    color: #a33a32;
+}
+
+.mesa-create-row,
+.mesera-create-row {
+    align-items: center;
+    background: #f7f2ec;
+    border: 1px solid #ece3da;
+    border-radius: 16px;
+    display: flex;
+    gap: 18px;
+    justify-content: space-between;
+    padding: 16px;
+}
+
+.mesa-create-control {
+    flex: 0 1 280px;
+}
+
+.mesa-admin-grid {
+    display: grid;
+    gap: 12px;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+}
+
+.mesa-admin-card {
+    background: #fff;
+    border: 1px solid #ebe4dc;
+    border-radius: 16px;
+    min-height: 145px;
+    padding: 16px;
+    position: relative;
+}
+
+.mesa-admin-card::before {
+    background: #2d8a5c;
+    border-radius: 16px 0 0 16px;
+    content: "";
+    height: 100%;
+    left: 0;
+    position: absolute;
+    top: 0;
+    width: 5px;
+}
+
+.mesa-admin-card.is-busy::before {
+    background: #c34c43;
+}
+
+.mesa-admin-label {
+    color: #82766b;
+    display: block;
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+}
+
+.mesa-admin-number {
+    color: #2b241f;
+    display: block;
+    font-size: 2rem;
+    line-height: 1.1;
+    margin-top: 5px;
+}
+
+.mesa-admin-footer {
+    align-items: center;
+    bottom: 14px;
+    display: flex;
+    gap: 6px;
+    justify-content: space-between;
+    left: 16px;
+    position: absolute;
+    right: 12px;
+}
+
+.mesa-status {
+    align-items: center;
+    color: #21704a;
+    display: inline-flex;
+    font-size: 0.76rem;
+    font-weight: 700;
+    gap: 5px;
+}
+
+.mesa-status i {
+    background: currentColor;
+    border-radius: 50%;
+    height: 7px;
+    width: 7px;
+}
+
+.is-busy .mesa-status {
+    color: #aa423a;
+}
+
+.mesa-empty {
+    background: #f7f2ec;
+    border: 1px dashed #d9cec2;
+    border-radius: 14px;
+    color: #71665c;
+    padding: 18px;
+}
+
+.mesera-create-row {
+    justify-content: flex-start;
+}
+
+.mesera-create-row input {
+    flex: 1;
+}
+
+.meseras-list {
+    display: grid;
+    gap: 10px;
+}
+
+.mesera-row {
+    align-items: center;
+    background: #fff;
+    border: 1px solid #eee6de;
+    border-radius: 14px;
+    display: flex;
+    gap: 12px;
+    padding: 12px 14px;
+}
+
+.mesera-avatar {
+    align-items: center;
+    background: #3a2921;
+    border-radius: 50%;
+    color: #fff;
+    display: inline-flex;
+    font-size: 0.82rem;
+    font-weight: 800;
+    height: 34px;
+    justify-content: center;
+    width: 34px;
+}
+
+@media (max-width: 576px) {
+    .mesa-create-row,
+    .mesera-create-row {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .mesa-create-control {
+        flex-basis: auto;
     }
 }
 
@@ -287,4 +479,195 @@ body, html { height: 100%; overflow: hidden; }
     color: #ede4e6 !important; /* Cambia este código por el color que desees */
     font-family: 'Montserrat', sans-serif; /* Asegura que use tu fuente principal */
     letter-spacing: 1px;
+}
+
+/* CONTROLES ADAPTABLES */
+.sales-summary-bar {
+    align-items: center;
+    display: flex;
+    gap: 16px;
+    justify-content: space-between;
+}
+
+.sales-actions {
+    display: flex;
+    flex: 0 1 540px;
+    gap: 8px;
+    justify-content: flex-end;
+}
+
+.sales-actions input {
+    max-width: 220px;
+}
+
+.confirm-toolbar #fechaConfirmar {
+    max-width: 280px;
+}
+
+@media (max-width: 992px) {
+    #wrapper {
+        height: 100dvh;
+        min-height: 100dvh;
+    }
+
+    #content.admin-main-content {
+        height: 100dvh !important;
+    }
+
+    #sidebar {
+        bottom: 0;
+        display: block;
+        height: 100dvh;
+        left: 0;
+        min-width: min(86vw, 310px);
+        overflow-y: auto;
+        position: fixed;
+        top: 0;
+        transform: translateX(-105%);
+        transition: transform 0.25s ease;
+        visibility: hidden;
+        width: min(86vw, 310px);
+        z-index: 1060;
+    }
+
+    #wrapper.mobile-menu-open #sidebar {
+        box-shadow: 16px 0 36px rgba(25, 18, 15, 0.32) !important;
+        transform: translateX(0);
+        visibility: visible;
+    }
+
+    .sidebar-backdrop {
+        background: rgba(28, 19, 15, 0.52);
+        border: 0;
+        bottom: 0;
+        cursor: default;
+        display: block;
+        left: 0;
+        opacity: 0;
+        pointer-events: none;
+        position: fixed;
+        right: 0;
+        top: 0;
+        transition: opacity 0.25s ease;
+        z-index: 1050;
+    }
+
+    #wrapper.mobile-menu-open .sidebar-backdrop {
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+    .admin-topbar {
+        align-items: center;
+        gap: 12px;
+        padding: 12px 16px !important;
+    }
+
+    .admin-menu-toggle {
+        align-items: center;
+        background: #30231d;
+        border: 0;
+        border-radius: 10px;
+        color: #fff;
+        display: inline-flex;
+        font-size: 1.25rem;
+        height: 42px;
+        justify-content: center;
+        line-height: 1;
+        width: 42px;
+    }
+
+    .admin-menu-toggle:focus-visible {
+        box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.32);
+        outline: 0;
+    }
+
+    .admin-mobile-caption {
+        color: #8b7b70;
+        display: block;
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        margin-top: 2px;
+        text-transform: uppercase;
+    }
+
+    .admin-page {
+        padding: 16px !important;
+    }
+
+    .sales-summary-bar {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .sales-actions {
+        flex: 1;
+        justify-content: stretch;
+        width: 100%;
+    }
+
+    .sales-actions input,
+    .sales-actions .btn {
+        flex: 1 1 0;
+        max-width: none;
+    }
+
+    #ventas-tab,
+    #menu .nav-pills,
+    #navTiposBebida {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        scrollbar-width: none;
+    }
+
+    #ventas-tab::-webkit-scrollbar,
+    #menu .nav-pills::-webkit-scrollbar,
+    #navTiposBebida::-webkit-scrollbar {
+        display: none;
+    }
+
+    #ventas-tab .nav-item,
+    #menu .nav-pills .nav-item {
+        min-width: max-content;
+    }
+
+    #menu .tab-pane {
+        overflow-x: auto;
+    }
+
+    #menu .table {
+        min-width: 470px;
+    }
+
+    .inventory-actions,
+    .confirm-toolbar {
+        flex-wrap: wrap;
+    }
+
+    .confirm-toolbar #fechaConfirmar {
+        flex: 1 1 200px;
+        max-width: none;
+    }
+}
+
+@media (max-width: 420px) {
+    .admin-topbar h5 {
+        font-size: 0.98rem;
+    }
+
+    .sales-actions {
+        flex-direction: column;
+    }
+
+    .sales-actions input,
+    .sales-actions .btn,
+    .inventory-actions .btn,
+    .confirm-toolbar .btn {
+        width: 100%;
+    }
+
+    .mesa-admin-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
 }

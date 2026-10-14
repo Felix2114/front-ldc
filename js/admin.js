@@ -42,6 +42,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     const apiPedidos = "https://api-ldc.onrender.com/pedidos";
     const apiMesas = "https://api-ldc.onrender.com/mesas";
+    const apiMeseras = "https://api-ldc.onrender.com/meseras";
 
     const listaComidas = document.getElementById("tablaComidas");
     const listaSnacks = document.getElementById("tablaSnacks");
@@ -52,8 +53,44 @@ document.addEventListener("DOMContentLoaded", async () => {
     const listaChidas = document.getElementById("tablaChidas");
     const listaDulces = document.getElementById("tablaDulces");
     const listaPostres = document.getElementById("tablaPostres");
-    const listaMesas = document.getElementById("listaMesas");
+    const contenedorMesas = document.getElementById("contenedorMesas");
+    const listaMeseras = document.getElementById("listaMeseras");
+    const formularioNuevaMesera = document.getElementById("formNuevaMesera");
+    const inputNuevaMesera = document.getElementById("nombreNuevaMesera");
+    const wrapper = document.getElementById("wrapper");
+    const botonMenuAdmin = document.getElementById("btnMenuAdmin");
+    const fondoMenuAdmin = document.getElementById("sidebarBackdrop");
     document.getElementById("fechaVentas").valueAsDate = new Date();
+
+    const esVistaMovil = () => window.matchMedia("(max-width: 992px)").matches;
+    const cambiarMenuAdmin = (abierto) => {
+        wrapper.classList.toggle("mobile-menu-open", abierto);
+        botonMenuAdmin.setAttribute("aria-expanded", String(abierto));
+        botonMenuAdmin.setAttribute("aria-label", abierto ? "Cerrar menú" : "Abrir menú");
+    };
+
+    botonMenuAdmin.addEventListener("click", () => {
+        cambiarMenuAdmin(!wrapper.classList.contains("mobile-menu-open"));
+    });
+
+    fondoMenuAdmin.addEventListener("click", () => cambiarMenuAdmin(false));
+
+    document.querySelectorAll("#adminTabs [data-bs-toggle='tab'], #adminTabs a").forEach((enlace) => {
+        enlace.addEventListener("click", () => {
+            if (esVistaMovil()) cambiarMenuAdmin(false);
+        });
+    });
+
+    document.addEventListener("keydown", (evento) => {
+        if (evento.key === "Escape" && wrapper.classList.contains("mobile-menu-open")) {
+            cambiarMenuAdmin(false);
+            botonMenuAdmin.focus();
+        }
+    });
+
+    window.addEventListener("resize", () => {
+        if (!esVistaMovil()) cambiarMenuAdmin(false);
+    });
 
 
     // Escuchar cambios en la fecha
@@ -76,6 +113,7 @@ fechaInput.value = `${year}-${month}-${day}`; // 📌 Siempre muestra la fecha l
 
     // ⏳ Cargar el resto de datos en segundo plano
     cargarDatos();
+    cargarMeseras();
    // setInterval(cargarDatos, 400000);// cambiar solo para que se actualice cuando se ocupe 
 
 async function cargarPedidosListosYMostrarConfirmar() {
@@ -346,30 +384,46 @@ async function cargarDatos() {
 
 
     function mostrarMesas(mesas) {
-        listaMesas.innerHTML = "";
-      
-        // Ordenar las mesas por el número de mesa de menor a mayor
-        mesas.sort((a, b) => a.numero - b.numero);
-      
-        mesas.forEach((mesa) => {
-           // console.log("Mesas recibidas:", mesas);
-            let row = document.createElement("tr");
-            row.innerHTML = `
-                <td>${mesa.numero}</td>
-                <td>${mesa.disponible ? "✅ Disponible" : "❌ Ocupada"}</td>
-                <td>
-                    <button class="btn btn-danger btn-sm eliminar">🗑️ Eliminar</button>
-                </td>
-            `;
-      
-            // Eliminar mesa
-            row.querySelector(".eliminar").addEventListener("click", async () => {
-                await eliminarMesa(mesa.id);
-                cargarDatos();
-                alert("Mesa eliminada correctamente.");
+        const mesasOrdenadas = Array.isArray(mesas)
+            ? [...mesas].sort((a, b) => Number(a.numero) - Number(b.numero))
+            : [];
+        const mesasLibres = mesasOrdenadas.filter((mesa) => mesa.disponible).length;
+
+        document.getElementById("totalMesas").textContent = mesasOrdenadas.length;
+        document.getElementById("mesasDisponibles").textContent = mesasLibres;
+        document.getElementById("mesasOcupadas").textContent = mesasOrdenadas.length - mesasLibres;
+
+        if (!mesasOrdenadas.length) {
+            contenedorMesas.innerHTML = '<p class="mesa-empty mb-0">Aún no hay mesas registradas. Agrega la primera con el formulario de arriba.</p>';
+            return;
+        }
+
+        contenedorMesas.innerHTML = mesasOrdenadas.map((mesa) => {
+            const numero = Number.isFinite(Number(mesa.numero)) ? Number(mesa.numero) : "—";
+            const disponible = mesa.disponible === true;
+            const estado = disponible ? "Libre" : "Ocupada";
+
+            return `
+                <article class="mesa-admin-card ${disponible ? "is-available" : "is-busy"}">
+                    <div>
+                        <span class="mesa-admin-label">Mesa</span>
+                        <strong class="mesa-admin-number">${numero}</strong>
+                    </div>
+                    <div class="mesa-admin-footer">
+                        <span class="mesa-status"><i></i>${estado}</span>
+                        <button class="btn btn-sm btn-outline-danger eliminar-mesa" data-id="${mesa.id}" data-numero="${numero}" ${disponible ? "" : "disabled"} title="${disponible ? "Eliminar mesa" : "No puedes eliminar una mesa ocupada"}">Eliminar</button>
+                    </div>
+                </article>`;
+        }).join("");
+
+        contenedorMesas.querySelectorAll(".eliminar-mesa").forEach((boton) => {
+            boton.addEventListener("click", async () => {
+                const numero = boton.dataset.numero;
+                if (!confirm(`¿Eliminar la mesa ${numero}?`)) return;
+
+                const eliminada = await eliminarMesa(boton.dataset.id);
+                if (eliminada) cargarDatos();
             });
-      
-            listaMesas.appendChild(row);
         });
     }
     
@@ -381,14 +435,15 @@ async function cargarDatos() {
                 method: "DELETE",
             });
     
-            if (response.ok) {
-                alert("Mesa eliminada correctamente.");
-            } else {
-                alert("Error al eliminar la mesa.");
-            }
+            const resultado = await response.json().catch(() => ({}));
+            if (!response.ok) throw new Error(resultado.error || "No fue posible eliminar la mesa.");
+
+            alert("Mesa eliminada correctamente.");
+            return true;
         } catch (error) {
             console.error("Error al eliminar la mesa:", error);
-            alert("Ocurrió un error al eliminar la mesa.");
+            alert(error.message || "Ocurrió un error al eliminar la mesa.");
+            return false;
         }
     }
     
@@ -416,18 +471,23 @@ async function cargarDatos() {
             const mesasActuales = await response.json();
             let ultimoNumero = obtenerUltimoNumeroMesa(mesasActuales);
     
-            // Agregar mesas numeradas automáticamente
-            for (let i = 1; i <= cantidad; i++) {
-                await fetch(apiMesas, {
+            // Agregar mesas numeradas automáticamente.
+            const respuestas = await Promise.all(
+                Array.from({ length: cantidad }, (_, indice) => fetch(apiMesas, {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json"
                     },
                     body: JSON.stringify({
-                        numero: ultimoNumero + i,
+                        numero: ultimoNumero + indice + 1,
                         disponible: true
                     })
-                });
+                }))
+            );
+            const fallo = respuestas.find((respuesta) => !respuesta.ok);
+            if (fallo) {
+                const resultado = await fallo.json().catch(() => ({}));
+                throw new Error(resultado.error || "No se pudieron agregar todas las mesas.");
             }
     
             alert(`${cantidad} mesas agregadas correctamente.`);
@@ -438,7 +498,90 @@ async function cargarDatos() {
             alert("Ocurrió un error al agregar las mesas.");
         }
     });
-    
+
+    function escaparHTML(valor) {
+        return String(valor ?? "").replace(/[&<>'"]/g, (caracter) => ({
+            "&": "&amp;",
+            "<": "&lt;",
+            ">": "&gt;",
+            "'": "&#39;",
+            '"': "&quot;"
+        })[caracter]);
+    }
+
+    async function cargarMeseras() {
+        listaMeseras.innerHTML = '<p class="text-muted mb-0">Cargando meseras...</p>';
+        try {
+            const respuesta = await fetch(apiMeseras);
+            const resultado = await respuesta.json().catch(() => ([]));
+            if (!respuesta.ok) throw new Error(resultado.error || "No fue posible cargar las meseras.");
+            mostrarMeseras(resultado);
+        } catch (error) {
+            console.error("Error al cargar meseras:", error);
+            listaMeseras.innerHTML = '<p class="text-danger mb-0">No se pudo cargar el personal. Intenta actualizar la página.</p>';
+        }
+    }
+
+    function mostrarMeseras(meseras) {
+        const meserasOrdenadas = Array.isArray(meseras)
+            ? [...meseras].sort((a, b) => (a.nombre || "").localeCompare(b.nombre || "", "es"))
+            : [];
+
+        if (!meserasOrdenadas.length) {
+            listaMeseras.innerHTML = '<p class="mesa-empty mb-0">Aún no hay meseras registradas.</p>';
+            return;
+        }
+
+        listaMeseras.innerHTML = meserasOrdenadas.map((mesera) => `
+            <article class="mesera-row">
+                <div class="mesera-avatar" aria-hidden="true">${escaparHTML((mesera.nombre || "?").charAt(0).toUpperCase())}</div>
+                <strong>${escaparHTML(mesera.nombre)}</strong>
+                <button class="btn btn-sm btn-light border eliminar-mesera ms-auto" data-id="${mesera.id}" data-nombre="${escaparHTML(mesera.nombre)}" type="button">Eliminar</button>
+            </article>`).join("");
+
+        listaMeseras.querySelectorAll(".eliminar-mesera").forEach((boton) => {
+            boton.addEventListener("click", async () => {
+                const nombre = boton.dataset.nombre;
+                if (!confirm(`¿Eliminar a ${nombre} del listado de meseras?`)) return;
+
+                try {
+                    const respuesta = await fetch(`${apiMeseras}/${boton.dataset.id}`, { method: "DELETE" });
+                    const resultado = await respuesta.json().catch(() => ({}));
+                    if (!respuesta.ok) throw new Error(resultado.error || "No fue posible eliminar la mesera.");
+                    await cargarMeseras();
+                } catch (error) {
+                    console.error("Error al eliminar mesera:", error);
+                    alert(error.message || "Ocurrió un error al eliminar la mesera.");
+                }
+            });
+        });
+    }
+
+    formularioNuevaMesera.addEventListener("submit", async (evento) => {
+        evento.preventDefault();
+        const nombre = inputNuevaMesera.value.trim();
+        if (!nombre) return;
+
+        const boton = formularioNuevaMesera.querySelector("button[type='submit']");
+        boton.disabled = true;
+        try {
+            const respuesta = await fetch(apiMeseras, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ nombre })
+            });
+            const resultado = await respuesta.json().catch(() => ({}));
+            if (!respuesta.ok) throw new Error(resultado.error || "No fue posible agregar la mesera.");
+
+            inputNuevaMesera.value = "";
+            await cargarMeseras();
+        } catch (error) {
+            console.error("Error al agregar mesera:", error);
+            alert(error.message || "Ocurrió un error al agregar la mesera.");
+        } finally {
+            boton.disabled = false;
+        }
+    });
 
     
 
