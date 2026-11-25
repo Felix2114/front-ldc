@@ -1,5 +1,6 @@
 let pedidosListos = [];
 let bebidasGlobal = [];
+const logoTicket = new URL('../images/logoLDC-blanco.png', import.meta.url).href;
 
 // Firebase App (obligatorio siempre)
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
@@ -666,7 +667,7 @@ function imprimirTicket(pedido) {
                 <title>Ticket</title>
                 <style>
                     body { font-family: monospace; padding: 10px; margin: 0; text-align: center; }
-                    img.logo { width: 100px; margin-bottom: 10px; }
+                    img.logo { display: block; width: 140px; max-width: 100%; height: auto; margin: 0 auto 10px; background: #fff; }
                     h2 { margin: 0; }
                     .info { text-align: left; margin: 10px 0; }
                     table { width: 100%; border-collapse: collapse; margin: 10px 0; }
@@ -681,7 +682,7 @@ function imprimirTicket(pedido) {
                 </style>
             </head>
             <body>
-                <img src="https://felix2114.github.io/front-ldc/images/LosDosCar.jpeg" class="logo" alt="Logo"><br>
+                <img src="${logoTicket}" class="logo" alt="Logo de Los Dos Carnales">
                 
                 <div style="margin-top: 10px; margin-bottom: 10px;">
                     <h1 style="margin: 0; font-size: 20px; letter-spacing: 1px; font-weight: bold;">LOS DOS CARNALES</h1>
@@ -793,7 +794,7 @@ function imprimirResumenVentas(pedidos) {
                 <title>Resumen de Ventas</title>
                 <style>
                     body { font-family: monospace; padding: 10px; margin: 0; text-align: center; }
-                    img.logo { width: 100px; margin-bottom: 10px; }
+                    img.logo { display: block; width: 140px; max-width: 100%; height: auto; margin: 0 auto 10px; background: #fff; }
                     h2 { margin: 0; }
                     .info { text-align: left; margin: 10px 0; }
                     table { width: 100%; border-collapse: collapse; margin: 10px 0; }
@@ -805,7 +806,7 @@ function imprimirResumenVentas(pedidos) {
             </head>
             <body>
             
-                <img src="https://felix2114.github.io/front-ldc/images/LosDosCar.jpeg" class="logo" alt="Logo"><br>
+                <img src="${logoTicket}" class="logo" alt="Logo de Los Dos Carnales">
                 <div style="margin-top: 10px; margin-bottom: 10px;">
                     <h1 style="margin: 0; font-size: 20px; letter-spacing: 1px; font-weight: bold;">LOS DOS CARNALES</h1>
                     <p style="margin: 0; font-size: 12px; font-style: italic; color: #555;">Restaurante Familiar</p>
@@ -895,7 +896,7 @@ function imprimirResumenMeseras(pedidos) {
                 <title>Resumen por Meseras</title>
                 <style>
                     body { font-family: monospace; padding: 10px; margin: 0; text-align: center; }
-                    img.logo { width: 100px; margin-bottom: 10px; }
+                    img.logo { display: block; width: 140px; max-width: 100%; height: auto; margin: 0 auto 10px; background: #fff; }
                     h2 { margin: 0; }
                     .info { text-align: left; margin: 10px 0; }
                     table { width: 100%; border-collapse: collapse; margin: 10px 0; }
@@ -905,7 +906,7 @@ function imprimirResumenMeseras(pedidos) {
                 </style>
             </head>
             <body>
-                <img src="https://felix2114.github.io/front-ldc/images/LosDosCar.jpeg" class="logo" alt="Logo"><br>
+                <img src="${logoTicket}" class="logo" alt="Logo de Los Dos Carnales">
                 <div style="margin-top: 10px; margin-bottom: 10px;">
                     <h1 style="margin: 0; font-size: 20px; letter-spacing: 1px; font-weight: bold;">LOS DOS CARNALES</h1>
                     <p style="margin: 0; font-size: 12px; font-style: italic; color: #555;">Restaurante Familiar</p>
@@ -1257,14 +1258,14 @@ window.imprimirTicketCategoria = function(tipo, datos) {
                 <title>Corte - ${tipo}</title>
                 <style>
                     body { font-family: monospace; padding: 20px; text-align: center; }
-                    .logo { width: 80px; filter: grayscale(1); }
+                    .logo { display: block; width: 140px; max-width: 100%; height: auto; margin: 0 auto 10px; background: #fff; }
                     table { width: 100%; border-collapse: collapse; margin-top: 10px; }
                     th, td { border-bottom: 1px dashed #000; }
                     .resumen { text-align: left; margin-top: 15px; font-size: 14px; }
                 </style>
             </head>
             <body>
-                <img src="https://felix2114.github.io/front-ldc/images/LosDosCar.jpeg" class="logo">
+                <img src="${logoTicket}" class="logo" alt="Logo de Los Dos Carnales">
                 <h2 style="margin:5px 0;">LOS DOS CARNALES</h2>
                 <h3>CORTE: ${tipo.toUpperCase()}</h3>
                 <p>Fecha: ${fechaSeleccionada}</p>
@@ -1458,7 +1459,7 @@ window.imprimirResumenCarta = function(datos, fecha) {
                 <style>
                     body { font-family: 'Segoe UI', Helvetica, Arial, sans-serif; padding: 40px; color: #333; line-height: 1.6; }
                     .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #dc3545; padding-bottom: 20px; margin-bottom: 30px; }
-                    .logo { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; }
+                    .logo { width: 140px; max-width: 40%; height: auto; background: #fff; }
                     h1 { margin: 0; color: #dc3545; font-size: 28px; text-transform: uppercase; }
                     table { width: 100%; border-collapse: collapse; margin-top: 20px; }
                     th { background: #333; color: white; padding: 12px; text-align: left; text-transform: uppercase; font-size: 13px; }
@@ -1473,7 +1474,7 @@ window.imprimirResumenCarta = function(datos, fecha) {
                         <h1>LOS DOS CARNALES</h1>
                         <p style="margin:0; color:#666;">Reporte Diario de Ventas por Categoría</p>
                     </div>
-                    <img src="https://felix2114.github.io/front-ldc/images/LosDosCar.jpeg" class="logo">
+                    <img src="${logoTicket}" class="logo" alt="Logo de Los Dos Carnales">
                 </div>
                 
                 <div class="info-meta">
